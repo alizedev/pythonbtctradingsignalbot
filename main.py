@@ -1,6 +1,4 @@
-from wallet import create_demo_wallet
-
-price = get_price()  # BTC price in USD
+price = get_price()
 
 wallet = create_demo_wallet(price)
 
