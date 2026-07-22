@@ -1,6 +1,19 @@
-price = get_price()
+import sys
 
-wallet = create_demo_wallet(price)
+from PyQt6.QtWidgets import QApplication
 
-print(f"Wallet: ${wallet.usd:,.2f}")
-print(f"BTC Holdings: {wallet.btc:.8f} BTC")
+from gui import Dashboard
+
+
+
+app = QApplication(sys.argv)
+
+
+window = Dashboard()
+
+window.show()
+
+
+sys.exit(
+    app.exec()
+)
