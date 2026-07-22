@@ -1,15 +1,19 @@
-BINANCE_API_KEY = ""
-BINANCE_SECRET = ""
+# config.py
 
+# Hardcoded BTC Price (Demo Mode)
+BTC_PRICE_USD = 118500.00
+
+
+# Demo Wallet
+START_BALANCE_USD = 1000.00
+
+
+# Trading Pair
 SYMBOL = "BTC/USDT"
 
 TIMEFRAME = "15m"
 
-RSI_BUY = 30
-RSI_SELL = 70
 
-SIGNAL_THRESHOLD = 85
-
-
+# Telegram
 TELEGRAM_TOKEN = ""
 CHAT_ID = ""

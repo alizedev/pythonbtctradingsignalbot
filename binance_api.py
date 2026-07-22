@@ -1,7 +1,12 @@
-import ccxt
+# binance_api.py
 
-exchange = ccxt.binance()
+import config
+
 
 def get_price():
-    ticker = exchange.fetch_ticker("BTC/USDT")
-    return ticker["last"]
+    """
+    Returns hardcoded BTC price
+    Demo mode
+    """
+
+    return config.BTC_PRICE_USD

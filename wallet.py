@@ -1,19 +1,24 @@
 from dataclasses import dataclass
-
-# Demo Wallet
-START_BALANCE_USD = 1000.00
+import config
 
 
 @dataclass
 class Wallet:
+
     usd: float
     btc: float
 
 
-def create_demo_wallet(btc_price_usd: float) -> Wallet:
-    btc_amount = START_BALANCE_USD / btc_price_usd
+
+def create_demo_wallet(btc_price):
+
+    btc_amount = (
+        config.START_BALANCE_USD
+        / btc_price
+    )
+
 
     return Wallet(
-        usd=START_BALANCE_USD,
+        usd=config.START_BALANCE_USD,
         btc=btc_amount
     )
