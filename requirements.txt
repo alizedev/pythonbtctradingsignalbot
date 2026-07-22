@@ -1,7 +1,9 @@
-ccxt
 pandas
 numpy
+ccxt
 ta
 python-binance
-python-telegram-bot
 python-dotenv
+python-telegram-bot
+PyQt6
+pyqtgraph

@@ -1,38 +1,18 @@
-import pandas as pd
+import sys
 
-from binance_api import get_candles,get_price
-from indicators import calculate
-from signal_engine import generate_signal
+from PyQt6.QtWidgets import QApplication
 
-
-while True:
+from gui import TradingDashboard
 
 
-    candles=get_candles()
+app = QApplication(sys.argv)
 
 
-    df=pd.DataFrame(
-        candles,
-        columns=[
-        "time",
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume"
-        ]
-    )
+window = TradingDashboard()
+
+window.show()
 
 
-    df=calculate(df)
-
-
-    signal=generate_signal(df)
-
-
-    print(
-        "BTC:",
-        get_price()
-    )
-
-    print(signal)
+sys.exit(
+    app.exec()
+)
