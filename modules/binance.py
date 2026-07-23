@@ -1,4 +1,5 @@
 from binance.client import Client
+from binance import ThreadedWebsocketManager
 
 
 
@@ -8,6 +9,11 @@ class BinanceModule:
     def __init__(self):
 
         self.client = Client()
+
+        self.ws_manager = None
+
+        self.callback = None
+
 
 
 
@@ -29,10 +35,12 @@ class BinanceModule:
 
         except Exception as e:
 
+
             print(
                 "Price Error:",
                 e
             )
+
 
             return 0
 
@@ -40,34 +48,31 @@ class BinanceModule:
 
 
 
-    def get_candles(self):
+    def load_candles(self):
 
 
-        try:
+        candles = self.client.get_klines(
 
+            symbol="BTCUSDT",
 
-            candles = self.client.get_klines(
+            interval=Client.KLINE_INTERVAL_5MINUTE,
 
-                symbol="BTCUSDT",
+            limit=100
 
-                interval=Client.KLINE_INTERVAL_5MINUTE,
-
-                limit=100
-
-            )
+        )
 
 
 
-            result = []
+        result = []
 
 
 
-            for c in candles:
+        for c in candles:
 
 
-                result.append(
+            result.append(
 
-                    {
+                {
 
                     "time": c[0],
 
@@ -79,30 +84,126 @@ class BinanceModule:
 
                     "close": float(c[4])
 
-                    }
+                }
+
+            )
+
+
+
+        return result
+
+
+
+
+
+    def start_live_candles(self, callback):
+
+
+        self.callback = callback
+
+
+
+        self.ws_manager = ThreadedWebsocketManager()
+
+
+
+        self.ws_manager.start()
+
+
+
+
+        def handle_message(msg):
+
+
+            try:
+
+
+                if msg.get("e") != "kline":
+
+                    return
+
+
+
+                k = msg["k"]
+
+
+
+                candle = {
+
+
+                    "time":
+
+                    k["t"],
+
+
+                    "open":
+
+                    float(k["o"]),
+
+
+                    "high":
+
+                    float(k["h"]),
+
+
+                    "low":
+
+                    float(k["l"]),
+
+
+                    "close":
+
+                    float(k["c"])
+
+                }
+
+
+
+                if self.callback:
+
+
+                    self.callback(
+                        candle
+                    )
+
+
+
+            except Exception as e:
+
+
+                print(
+
+                    "Websocket Error:",
+
+                    e
 
                 )
 
 
 
-            return result
+
+
+        self.ws_manager.start_kline_socket(
+
+            callback=handle_message,
+
+            symbol="BTCUSDT",
+
+            interval="5m"
+
+        )
 
 
 
-        except Exception as e:
 
 
-            print(
-
-                "Candle Error:",
-
-                e
-
-            )
+    def stop_websocket(self):
 
 
-            return []
+        if self.ws_manager:
 
+
+            self.ws_manager.stop()
 
 
 
@@ -110,6 +211,7 @@ class BinanceModule:
 
 
         try:
+
 
             return self.client.get_my_trades(
 

@@ -1,10 +1,10 @@
 # =====================================
-# Tiberius BTC Trading Terminal
-# Python Dependencies
+# BTC Trading Terminal
+# Dependencies
 # =====================================
 
 
-# GUI Framework
+# GUI
 PyQt6==6.9.1
 
 
@@ -12,33 +12,30 @@ PyQt6==6.9.1
 pyqtgraph==0.13.7
 
 
-# Binance API
+# Binance API + WebSocket
 python-binance==1.0.29
 
 
-# HTTP Requests
+# HTTP
 requests==2.32.4
 
 
-# Data Handling
-pandas==2.3.1
+# Async WebSocket Support
+aiohttp==3.12.15
 
 
-# Numerical calculations
+# Data Processing
 numpy==2.0.2
+pandas==2.3.1
 
 
 # Environment Variables
 python-dotenv==1.1.1
 
 
-# Websocket support for live data
+# Websocket Client
 websocket-client==1.8.0
 
 
-# Async support
-aiohttp==3.12.15
-
-
-# Date / Time utilities
+# Date Handling
 python-dateutil==2.9.0.post0
