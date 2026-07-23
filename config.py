@@ -1,24 +1,19 @@
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
-# Binance API
+BINANCE_ENABLED = True
 
-BINANCE_API_KEY = os.getenv(
-    "BINANCE_API_KEY"
-)
+TRADING_ENABLED = False
 
-BINANCE_SECRET_KEY = os.getenv(
-    "BINANCE_SECRET_KEY"
-)
+SIGNAL_ENGINE_ENABLED = True
 
+TELEGRAM_ENABLED = False
 
-# Trading Simulator
+DATABASE_ENABLED = True
 
-START_BALANCE_USD = 1000.0
+DOCKER_MODE = False
 
 
-# Test BTC Preis
-BTC_PRICE_USD = 118000.0
+START_BALANCE_USD = 1000
+
+TRADING_MODE = "PAPER"

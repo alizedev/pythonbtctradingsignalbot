@@ -1,0 +1,24 @@
+services:
+
+  btc-trading-bot:
+
+    container_name: btc-trading-signal-bot
+
+    build:
+      context: .
+
+    restart: always
+
+
+    env_file:
+      - .env
+
+
+    volumes:
+
+      - ./data:/app/data
+
+
+    environment:
+
+      - TZ=Europe/Berlin

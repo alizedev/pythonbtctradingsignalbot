@@ -1,35 +1,61 @@
 # Changelog
 
-## Version 1.1.0 - GUI Release
-
-### Added
-
-- New PyQt6 desktop interface
-- Dark trading dashboard
-- BTC price panel
-- Signal display
-- Confidence indicator
-- Better project structure
-
-
-### Improved
-
-- Cleaner code architecture
-- Better configuration handling
-- Easier future AI integration
-
+All notable changes are documented here.
 
 ---
 
-## Version 1.0.0
+# Version 1.0.0
 
-Initial release.
+Release Date:
+2026-07-23
 
-Features:
+## Added
 
-- Binance BTC price tracking
-- RSI indicator
-- MACD indicator
-- EMA trend analysis
-- Signal scoring system
-- Telegram notifications
+### Dashboard
+
+* PyQt6 dark mode interface
+* Portfolio overview
+* Trading control panel
+
+### Binance
+
+* API connection
+* Wallet reading
+* Market price fetching
+
+### Modular System
+
+Added switchable modules:
+
+* Binance Module
+* Trading Module
+* Signal Module
+* Database Module
+* Telegram Module
+* Docker Module
+
+### Docker
+
+Added:
+
+* Dockerfile
+* docker-compose.yml
+* automatic restart
+* Linux server support
+
+## Security
+
+* API keys moved to `.env`
+* Withdraw permissions not required
+* Paper trading enabled by default
+
+---
+
+# Version 0.9.0
+
+## Added
+
+* Initial BTC signal engine
+* Basic GUI
+* Portfolio models
+* Candle and trade models
