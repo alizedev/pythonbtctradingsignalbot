@@ -1,11 +1,6 @@
 class SignalService:
 
-
-    def calculate_signal(
-        self,
-        price,
-        ema
-    ):
+    def calculate_signal(self, price, ema):
 
         if price > ema:
             return "BUY"

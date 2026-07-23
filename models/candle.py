@@ -34,7 +34,6 @@ class Candle:
 
         return self.close_price > self.open_price
 
-
     def is_red(self) -> bool:
         """
         Prüft ob die Kerze negativ geschlossen hat
@@ -42,17 +41,13 @@ class Candle:
 
         return self.close_price < self.open_price
 
-
     @property
     def body_size(self) -> float:
         """
         Größe des Kerzenkörpers
         """
 
-        return abs(
-            self.close_price - self.open_price
-        )
-
+        return abs(self.close_price - self.open_price)
 
     @property
     def percentage_change(self) -> float:
@@ -63,31 +58,21 @@ class Candle:
         if self.open_price == 0:
             return 0
 
-        return (
-            (self.close_price - self.open_price)
-            / self.open_price
-        ) * 100
-
+        return ((self.close_price - self.open_price) / self.open_price) * 100
 
     def open_datetime(self):
         """
         Startzeit als Datum
         """
 
-        return datetime.fromtimestamp(
-            self.open_time / 1000
-        )
-
+        return datetime.fromtimestamp(self.open_time / 1000)
 
     def close_datetime(self):
         """
         Endzeit als Datum
         """
 
-        return datetime.fromtimestamp(
-            self.close_time / 1000
-        )
-
+        return datetime.fromtimestamp(self.close_time / 1000)
 
     def to_dict(self):
         """
@@ -105,9 +90,8 @@ class Candle:
             "close": self.close_price,
             "volume": self.volume,
             "quote_volume": self.quote_volume,
-            "trades": self.trades
+            "trades": self.trades,
         }
-
 
     def __str__(self):
         return (

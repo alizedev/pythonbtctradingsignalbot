@@ -5,37 +5,25 @@ import asyncio
 
 async def send_signal(message):
 
-    bot = Bot(
-        token=config.TELEGRAM_TOKEN
-    )
+    bot = Bot(token=config.TELEGRAM_TOKEN)
 
-    await bot.send_message(
-        chat_id=config.CHAT_ID,
-        text=message
-    )
-
+    await bot.send_message(chat_id=config.CHAT_ID, text=message)
 
 
 def send_telegram(message):
 
-    asyncio.run(
-        send_signal(message)
-    )
-
+    asyncio.run(send_signal(message))
 
 
 def format_signal(signal, price):
 
     emoji = "⚪"
 
-
     if signal["signal"] == "BUY":
         emoji = "🟢"
 
     elif signal["signal"] == "SELL":
         emoji = "🔴"
-
-
 
     message = f"""
 {emoji} BTC AI SIGNAL ALERT
@@ -56,6 +44,5 @@ BTC Price:
 
 Powered by BTC AI Tracker
 """
-
 
     return message

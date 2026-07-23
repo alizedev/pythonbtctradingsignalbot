@@ -5,10 +5,9 @@ from PyQt6.QtWidgets import QApplication
 from gui import Dashboard
 
 
+
 class TradingBotApp:
-    """
-    Hauptanwendung für den BTC Trading Signal Bot
-    """
+
 
     def __init__(self):
 
@@ -18,10 +17,11 @@ class TradingBotApp:
 
         self.window = Dashboard()
 
-
-    def start(self):
-
         self.window.show()
+
+
+
+    def run(self):
 
         sys.exit(
             self.app.exec()
@@ -29,8 +29,10 @@ class TradingBotApp:
 
 
 
+
 if __name__ == "__main__":
+
 
     application = TradingBotApp()
 
-    application.start()
+    application.run()

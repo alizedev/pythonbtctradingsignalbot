@@ -38,7 +38,6 @@ class Account:
         """
         self.balances.append(balance)
 
-
     def get_balance(self, asset: str) -> float:
         """
         Gibt den Bestand eines Coins zurück
@@ -52,7 +51,6 @@ class Account:
 
         return 0.0
 
-
     def calculate_roi(self, invested_amount: float):
         """
         Berechnet ROI
@@ -63,10 +61,8 @@ class Account:
             return
 
         self.roi_percentage = (
-            (self.total_value_usdt - invested_amount)
-            / invested_amount
+            (self.total_value_usdt - invested_amount) / invested_amount
         ) * 100
-
 
     def update_value(self, value_usdt: float):
         """
@@ -75,18 +71,14 @@ class Account:
 
         self.total_value_usdt = value_usdt
 
-
     def update_profit(self, invested_amount: float):
         """
         Berechnet Gewinn/Verlust
         """
 
-        self.total_profit_loss = (
-            self.total_value_usdt - invested_amount
-        )
+        self.total_profit_loss = self.total_value_usdt - invested_amount
 
         self.calculate_roi(invested_amount)
-
 
     def get_summary(self):
         """
@@ -98,5 +90,5 @@ class Account:
             "Portfolio Value": f"{self.total_value_usdt:.2f} USDT",
             "Profit/Loss": f"{self.total_profit_loss:.2f} USDT",
             "ROI": f"{self.roi_percentage:.2f}%",
-            "Coins": len(self.balances)
+            "Coins": len(self.balances),
         }

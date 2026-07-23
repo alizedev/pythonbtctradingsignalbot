@@ -1,0 +1,34 @@
+[
+    {
+        "symbol": "BTCUSDT",
+        "side": "BUY",
+        "price": 65000.00,
+        "quantity": 0.010000,
+        "fee": 0.00001,
+        "time": "2026-07-23 10:00:00"
+    },
+    {
+        "symbol": "BTCUSDT",
+        "side": "SELL",
+        "price": 70000.00,
+        "quantity": 0.010000,
+        "fee": 0.00001,
+        "time": "2026-07-23 12:00:00"
+    },
+    {
+        "symbol": "BTCUSDT",
+        "side": "BUY",
+        "price": 67500.50,
+        "quantity": 0.020000,
+        "fee": 0.00002,
+        "time": "2026-07-23 14:30:00"
+    },
+    {
+        "symbol": "BTCUSDT",
+        "side": "SELL",
+        "price": 72000.00,
+        "quantity": 0.020000,
+        "fee": 0.00002,
+        "time": "2026-07-23 18:45:00"
+    }
+]

@@ -18,7 +18,7 @@ class Trade:
     trade_id: str
 
     symbol: str
-    side: str        # BUY oder SELL
+    side: str  # BUY oder SELL
 
     quantity: float
     price: float
@@ -37,14 +37,12 @@ class Trade:
 
         return self.quantity * self.price
 
-
     def net_value(self) -> float:
         """
         Wert nach Gebühren
         """
 
         return self.total_value() - self.fee
-
 
     def is_buy(self) -> bool:
         """
@@ -53,14 +51,12 @@ class Trade:
 
         return self.side.upper() == "BUY"
 
-
     def is_sell(self) -> bool:
         """
         Prüft ob Verkauf
         """
 
         return self.side.upper() == "SELL"
-
 
     def get_datetime(self):
         """
@@ -70,15 +66,9 @@ class Trade:
         if self.timestamp == 0:
             return None
 
-        return datetime.fromtimestamp(
-            self.timestamp / 1000
-        )
+        return datetime.fromtimestamp(self.timestamp / 1000)
 
-
-    def profit_loss(
-        self,
-        buy_price: float
-    ) -> float:
+    def profit_loss(self, buy_price: float) -> float:
         """
         Berechnet Gewinn/Verlust
         Beispiel:
@@ -89,16 +79,9 @@ class Trade:
         if not self.is_sell():
             return 0.0
 
-        return (
-            (self.price - buy_price)
-            * self.quantity
-        ) - self.fee
+        return ((self.price - buy_price) * self.quantity) - self.fee
 
-
-    def roi(
-        self,
-        buy_price: float
-    ) -> float:
+    def roi(self, buy_price: float) -> float:
         """
         ROI Prozent
         """
@@ -106,13 +89,7 @@ class Trade:
         if buy_price <= 0:
             return 0.0
 
-        return (
-            (
-                self.price - buy_price
-            )
-            / buy_price
-        ) * 100
-
+        return ((self.price - buy_price) / buy_price) * 100
 
     def to_dict(self):
         """
@@ -128,13 +105,8 @@ class Trade:
             "fee": self.fee,
             "fee_asset": self.fee_asset,
             "timestamp": self.timestamp,
-            "order_id": self.order_id
+            "order_id": self.order_id,
         }
 
-
     def __str__(self):
-        return (
-            f"{self.side} "
-            f"{self.quantity} {self.symbol} "
-            f"@ {self.price}"
-        )
+        return f"{self.side} " f"{self.quantity} {self.symbol} " f"@ {self.price}"
