@@ -365,109 +365,74 @@ class Dashboard(QWidget):
 
         try:
 
-
             path = os.path.join(
 
                 os.path.dirname(
-
                     os.path.abspath(__file__)
-
                 ),
 
                 "trades.json"
 
             )
 
-
             if not os.path.exists(path):
-
-
                 self.log_message(
                     "⚠ trades.json fehlt"
                 )
 
-
                 return
 
-
-
             with open(
-
-                path,
-
-                "r"
-
+                    path,
+                    "r"
             ) as file:
-
 
                 trades = json.load(file)
 
-
-
-
             self.table.setRowCount(
-
                 len(trades)
-
             )
-
-
 
             buy_price = None
 
-
-
             for row, trade in enumerate(trades):
 
-
                 side = trade.get(
-
                     "side",
-
                     "BUY"
-
                 )
 
-
+                symbol = trade.get(
+                    "symbol",
+                    "BTCUSDT"
+                )
 
                 price = float(
-
                     trade.get(
-
                         "price",
-
                         0
-
                     )
-
                 )
-
-
 
                 amount = float(
-
                     trade.get(
-
                         "quantity",
-
                         0
-
                     )
-
                 )
 
-
+                fee = float(
+                    trade.get(
+                        "fee",
+                        0
+                    )
+                )
 
                 value = price * amount
 
-
-
                 pnl = 0
 
-
-
                 if side == "BUY":
-
 
                     buy_price = price
 
@@ -475,42 +440,53 @@ class Dashboard(QWidget):
 
                 elif side == "SELL" and buy_price:
 
-
                     pnl = (
 
-                        price - buy_price
+                                  price - buy_price
 
-                    ) * amount
+                          ) * amount
 
+                if side == "BUY":
 
+                    side_text = "🟢 BUY"
 
+                else:
+
+                    side_text = "🔴 SELL"
+
+                if pnl > 0:
+
+                    pnl_text = (
+                        f"🟢 +${pnl:,.2f}"
+                    )
+
+                elif pnl < 0:
+
+                    pnl_text = (
+                        f"🔴 ${pnl:,.2f}"
+                    )
+
+                else:
+
+                    pnl_text = (
+                        "⚪ $0.00"
+                    )
 
                 data = [
 
-                    trade.get(
-                        "symbol",
-                        "BTCUSDT"
-                    ),
+                    symbol,
 
-                    "🟢 BUY"
-                    if side == "BUY"
-                    else
-                    "🔴 SELL",
+                    side_text,
 
                     f"${price:,.2f}",
 
-                    f"{amount:.6f}",
+                    f"{amount:.6f} BTC",
 
-                    str(
-                        trade.get(
-                            "fee",
-                            0
-                        )
-                    ),
+                    f"{fee:.8f} BTC",
 
                     f"${value:,.2f}",
 
-                    f"${pnl:,.2f}",
+                    pnl_text,
 
                     trade.get(
                         "time",
@@ -519,10 +495,10 @@ class Dashboard(QWidget):
 
                 ]
 
-
-
                 for col, text in enumerate(data):
-
+                    item = QTableWidgetItem(
+                        str(text)
+                    )
 
                     self.table.setItem(
 
@@ -530,23 +506,37 @@ class Dashboard(QWidget):
 
                         col,
 
-                        QTableWidgetItem(
-
-                            str(text)
-
-                        )
+                        item
 
                     )
 
+                # Side Farbe
 
+                self.table.item(
+                    row,
+                    1
+                ).setForeground(
 
+                    QColor(
+                        "#00ff88"
+                    )
+                    if side == "BUY"
 
-                if side == "BUY":
+                    else
 
+                    QColor(
+                        "#ff4444"
+                    )
+
+                )
+
+                # P/L Farbe
+
+                if pnl > 0:
 
                     self.table.item(
                         row,
-                        1
+                        6
                     ).setForeground(
 
                         QColor(
@@ -555,13 +545,11 @@ class Dashboard(QWidget):
 
                     )
 
-
-                else:
-
+                elif pnl < 0:
 
                     self.table.item(
                         row,
-                        1
+                        6
                     ).setForeground(
 
                         QColor(
@@ -570,11 +558,11 @@ class Dashboard(QWidget):
 
                     )
 
-
-
             self.table.resizeColumnsToContents()
 
-
+            self.table.horizontalHeader().setStretchLastSection(
+                True
+            )
 
             self.log_message(
 
@@ -586,10 +574,9 @@ class Dashboard(QWidget):
 
         except Exception as e:
 
-
             self.log_message(
 
-                f"❌ Trade Fehler: {e}"
+                f"❌ Failed to trace Trades: {e}"
 
             )
 
