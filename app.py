@@ -11,9 +11,7 @@ class TradingBotApp:
 
     def __init__(self):
 
-        self.app = QApplication(
-            sys.argv
-        )
+        self.app = QApplication(sys.argv)
 
         self.window = Dashboard()
 
@@ -29,9 +27,7 @@ class TradingBotApp:
 
 
 
-
 if __name__ == "__main__":
-
 
     application = TradingBotApp()
 

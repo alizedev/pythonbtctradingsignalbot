@@ -1,8 +1,44 @@
-ccxt
-python-binance
-websockets
-pandas
-numpy
-requests
-PyQt6
-mplfinance
+# =====================================
+# Tiberius BTC Trading Terminal
+# Python Dependencies
+# =====================================
+
+
+# GUI Framework
+PyQt6==6.9.1
+
+
+# Interactive Charts
+pyqtgraph==0.13.7
+
+
+# Binance API
+python-binance==1.0.29
+
+
+# HTTP Requests
+requests==2.32.4
+
+
+# Data Handling
+pandas==2.3.1
+
+
+# Numerical calculations
+numpy==2.0.2
+
+
+# Environment Variables
+python-dotenv==1.1.1
+
+
+# Websocket support for live data
+websocket-client==1.8.0
+
+
+# Async support
+aiohttp==3.12.15
+
+
+# Date / Time utilities
+python-dateutil==2.9.0.post0

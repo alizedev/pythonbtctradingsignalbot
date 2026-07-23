@@ -1,6 +1,3 @@
-import json
-import os
-
 from binance.client import Client
 
 
@@ -10,64 +7,11 @@ class BinanceModule:
 
     def __init__(self):
 
-        self.client = None
-
-        self.load_api()
-
-
-
-    def load_api(self):
-
-        try:
-
-            path = "data/binance.json"
-
-
-            if not os.path.exists(path):
-
-                print(
-                    "⚠ No Binance API"
-                )
-
-                return
-
-
-
-            with open(path, "r") as f:
-
-                data = json.load(f)
-
-
-
-            self.client = Client(
-
-                data["api_key"],
-
-                data["secret_key"]
-
-            )
-
-
-            print(
-                "✅ Binance connected"
-            )
-
-
-        except Exception as e:
-
-            print(
-                "Binance error:",
-                e
-            )
+        self.client = Client()
 
 
 
     def get_btc_price(self):
-
-        if not self.client:
-
-            return 0
-
 
         try:
 
@@ -83,6 +27,98 @@ class BinanceModule:
             )
 
 
-        except:
+        except Exception as e:
+
+            print(
+                "Price Error:",
+                e
+            )
 
             return 0
+
+
+
+
+
+    def get_candles(self):
+
+
+        try:
+
+
+            candles = self.client.get_klines(
+
+                symbol="BTCUSDT",
+
+                interval=Client.KLINE_INTERVAL_5MINUTE,
+
+                limit=100
+
+            )
+
+
+
+            result = []
+
+
+
+            for c in candles:
+
+
+                result.append(
+
+                    {
+
+                    "time": c[0],
+
+                    "open": float(c[1]),
+
+                    "high": float(c[2]),
+
+                    "low": float(c[3]),
+
+                    "close": float(c[4])
+
+                    }
+
+                )
+
+
+
+            return result
+
+
+
+        except Exception as e:
+
+
+            print(
+
+                "Candle Error:",
+
+                e
+
+            )
+
+
+            return []
+
+
+
+
+    def get_trades(self):
+
+
+        try:
+
+            return self.client.get_my_trades(
+
+                symbol="BTCUSDT"
+
+            )
+
+
+        except:
+
+
+            return []
