@@ -4,25 +4,26 @@ class RiskManager:
     def __init__(self):
 
 
-        # Startkapital Paper Trading
+        # Kontostand
 
-        self.balance = 500.0
-
-
-        # maximaler Einsatz pro Trade
-
-        self.trade_percent = 2.0
+        self.account_balance = 50.0
 
 
-        # Verlustgrenze
+        # maximaler Einsatz pro Trade in %
 
-        self.stop_loss_percent = 2.5
+        self.max_trade_percent = 10
 
 
-        # Gewinnziel
+
+        # Stop Loss / Take Profit
+
+        self.stop_loss_percent = 2.0
 
         self.take_profit_percent = 5.0
 
+
+
+        self.open_trade = None
 
 
 
@@ -30,7 +31,7 @@ class RiskManager:
 
 
     # ==========================
-    # TRADE AMOUNT
+    # TRADE GRÖSSE
     # ==========================
 
     def get_trade_amount(self):
@@ -38,32 +39,20 @@ class RiskManager:
 
         amount = (
 
-            self.balance
+            self.account_balance
 
             *
 
-            (
+            self.max_trade_percent
 
-                self.trade_percent
+            /
 
-                /
-
-                100
-
-            )
+            100
 
         )
 
 
-
-        return round(
-
-            amount,
-
-            2
-
-        )
-
+        return round(amount, 2)
 
 
 
@@ -71,108 +60,21 @@ class RiskManager:
 
 
     # ==========================
-    # STOP LOSS
+    # DARF TRADE AUSFÜHREN?
     # ==========================
 
-    def calculate_stop_loss(
-
-        self,
-
-        entry_price
-
-    ):
-
-
-        return round(
-
-            entry_price
-
-            *
-
-            (
-
-                1
-
-                -
-
-                self.stop_loss_percent / 100
-
-            ),
-
-            2
-
-        )
-
-
-
-
-
-
-
-    # ==========================
-    # TAKE PROFIT
-    # ==========================
-
-    def calculate_take_profit(
-
-        self,
-
-        entry_price
-
-    ):
-
-
-        return round(
-
-            entry_price
-
-            *
-
-            (
-
-                1
-
-                +
-
-                self.take_profit_percent / 100
-
-            ),
-
-            2
-
-        )
-
-
-
-
-
-
-
-    # ==========================
-    # CHECK POSITION
-    # ==========================
-
-    def allowed_trade(
-
-        self,
-
-        amount
-
-    ):
+    def allowed_trade(self, amount):
 
 
         if amount <= 0:
 
-
             return False
 
 
 
-        if amount > self.balance:
-
+        if amount > self.account_balance:
 
             return False
-
 
 
 
@@ -183,21 +85,40 @@ class RiskManager:
 
 
 
-
     # ==========================
-    # UPDATE BALANCE
+    # STOP LOSS
     # ==========================
 
-    def update_balance(
+    def check_stop_loss(
 
         self,
 
-        value
+        buy_price,
+
+        current_price
 
     ):
 
 
-        self.balance += value
+        change = (
+
+            (current_price - buy_price)
+
+            /
+
+            buy_price
+
+        ) * 100
+
+
+
+        if change <= -self.stop_loss_percent:
+
+            return True
+
+
+
+        return False
 
 
 
@@ -205,33 +126,94 @@ class RiskManager:
 
 
     # ==========================
-    # STATUS
+    # TAKE PROFIT
     # ==========================
 
-    def get_status(self):
+    def check_take_profit(
+
+        self,
+
+        buy_price,
+
+        current_price
+
+    ):
 
 
-        return {
+        change = (
+
+            (current_price - buy_price)
+
+            /
+
+            buy_price
+
+        ) * 100
 
 
-            "balance":
 
-            self.balance,
+        if change >= self.take_profit_percent:
 
-
-            "trade_size":
-
-            self.get_trade_amount(),
+            return True
 
 
-            "stop_loss":
 
-            self.stop_loss_percent,
+        return False
 
 
-            "take_profit":
 
-            self.take_profit_percent
 
+
+
+    # ==========================
+    # POSITION ÖFFNEN
+    # ==========================
+
+    def open_position(
+
+        self,
+
+        price,
+
+        amount
+
+    ):
+
+
+        self.open_trade = {
+
+
+            "buy_price": price,
+
+            "amount": amount
 
         }
+
+
+
+
+
+
+
+    # ==========================
+    # POSITION SCHLIESSEN
+    # ==========================
+
+    def close_position(self):
+
+
+        self.open_trade = None
+
+
+
+
+
+
+    # ==========================
+    # POSITION AKTUELL?
+    # ==========================
+
+    def has_position(self):
+
+
+        return self.open_trade is not None
