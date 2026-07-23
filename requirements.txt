@@ -39,3 +39,5 @@ websocket-client==1.8.0
 
 # Date Handling
 python-dateutil==2.9.0.post0
+
+websocket-client

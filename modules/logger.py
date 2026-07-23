@@ -1,5 +1,5 @@
-import logging
-import os
+from datetime import datetime
+
 
 
 class TradingLogger:
@@ -7,48 +7,111 @@ class TradingLogger:
 
     def __init__(self):
 
-        os.makedirs(
-            "logs",
-            exist_ok=True
+        pass
+
+
+
+
+
+    # ==========================
+    # INFO
+    # ==========================
+
+    def info(
+
+        self,
+
+        message
+
+    ):
+
+
+        text = (
+
+            f"[{self.time()}] INFO: {message}"
+
         )
 
 
-        logging.basicConfig(
+        print(text)
 
-            filename="logs/trading.log",
 
-            level=logging.INFO,
+        return text
 
-            format=
-            "%(asctime)s | %(levelname)s | %(message)s"
+
+
+
+
+
+    # ==========================
+    # ERROR
+    # ==========================
+
+    def error(
+
+        self,
+
+        message
+
+    ):
+
+
+        text = (
+
+            f"[{self.time()}] ERROR: {message}"
 
         )
 
 
-        self.log = logging.getLogger()
+        print(text)
+
+
+        return text
 
 
 
-    def info(self, message):
 
-        print(
-            "INFO:",
-            message
+
+
+    # ==========================
+    # WARNING
+    # ==========================
+
+    def warning(
+
+        self,
+
+        message
+
+    ):
+
+
+        text = (
+
+            f"[{self.time()}] WARNING: {message}"
+
         )
 
-        self.log.info(
-            message
-        )
+
+        print(text)
+
+
+        return text
 
 
 
-    def error(self, message):
 
-        print(
-            "ERROR:",
-            message
-        )
 
-        self.log.error(
-            message
+
+    # ==========================
+    # TIME
+    # ==========================
+
+    def time(self):
+
+
+        return datetime.now().strftime(
+
+            "%Y-%m-%d %H:%M:%S"
+
         )

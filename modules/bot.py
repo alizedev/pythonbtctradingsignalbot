@@ -1,20 +1,27 @@
 import threading
 import time
 
-from modules.logger import TradingLogger
-
 
 
 class TradingBot:
 
 
     def __init__(
+
         self,
+
+        binance,
+
         strategy,
+
         trader,
+
         risk
+
     ):
 
+
+        self.binance = binance
 
         self.strategy = strategy
 
@@ -23,12 +30,19 @@ class TradingBot:
         self.risk = risk
 
 
-        self.logger = TradingLogger()
-
 
         self.running = False
 
+        self.auto_trade = False
+
+
+
         self.thread = None
+
+
+
+        self.callback = None
+
 
 
         self.last_signal = "WAIT"
@@ -38,21 +52,20 @@ class TradingBot:
 
 
     # ==========================
-    # START BOT
+    # START
     # ==========================
 
     def start(
+
         self,
-        get_candles,
-        status_callback=None
+
+        callback=None
+
     ):
 
 
         if self.running:
 
-            self.logger.info(
-                "Bot läuft bereits"
-            )
 
             return
 
@@ -61,24 +74,14 @@ class TradingBot:
         self.running = True
 
 
+        self.callback = callback
 
-        self.logger.info(
-            "🟢 Trading gestartet"
-        )
 
 
 
         self.thread = threading.Thread(
 
-            target=self.loop,
-
-            args=(
-
-                get_candles,
-
-                status_callback
-
-            )
+            target=self.loop
 
         )
 
@@ -90,17 +93,23 @@ class TradingBot:
 
 
 
+        print(
+
+            "🟢 Trading Bot gestartet"
+
+        )
+
+
+
+
+
 
 
     # ==========================
     # MAIN LOOP
     # ==========================
 
-    def loop(
-        self,
-        get_candles,
-        status_callback
-    ):
+    def loop(self):
 
 
         while self.running:
@@ -109,22 +118,31 @@ class TradingBot:
             try:
 
 
-                candles = get_candles()
+
+                candles = self.binance.get_candles(
+
+                    200
+
+                )
+
 
 
 
                 if len(candles) < 50:
 
 
-                    self.logger.info(
+                    print(
 
-                        "Warte auf genügend Candles"
+                        "Keine Daten"
 
                     )
+
 
                     time.sleep(60)
 
                     continue
+
+
 
 
 
@@ -136,7 +154,8 @@ class TradingBot:
                 )
 
 
-                self.last_signal = signal
+
+                score = self.strategy.get_score()
 
 
 
@@ -144,28 +163,33 @@ class TradingBot:
 
 
 
+                self.last_signal = signal
+
+
+
+
                 message = (
 
-                    f"BTC: {price:.2f} | "
+                    f"BTC ${price:,.2f} "
 
-                    f"Signal: {signal}"
+                    f"| Signal {signal} "
 
-                )
-
-
-
-                self.logger.info(
-
-                    message
+                    f"| Score {score}/100"
 
                 )
 
 
 
-                if status_callback:
+                print(message)
 
 
-                    status_callback(
+
+
+
+                if self.callback:
+
+
+                    self.callback(
 
                         signal
 
@@ -175,55 +199,30 @@ class TradingBot:
 
 
 
-                # BUY
 
-                if signal == "BUY":
-
-
-                    self.logger.info(
-
-                        "BUY Signal erkannt"
-
-                    )
+                # =====================
+                # AUTO TRADING
+                # =====================
 
 
-                    amount = self.risk.max_trade_usdt
+                if self.auto_trade:
 
 
 
-                    self.trader.buy(
+                    if signal == "BUY" and score >= 80:
 
-                        amount
 
-                    )
+                        self.buy_trade()
 
 
 
 
 
-                # SELL
-
-                elif signal == "SELL":
+                    elif signal == "SELL" and score <= 20:
 
 
-                    self.logger.info(
+                        self.sell_trade()
 
-                        "SELL Signal erkannt"
-
-                    )
-
-
-
-
-
-                else:
-
-
-                    self.logger.info(
-
-                        "Keine Aktion"
-
-                    )
 
 
 
@@ -232,15 +231,20 @@ class TradingBot:
             except Exception as e:
 
 
-                self.logger.error(
 
-                    str(e)
+                print(
+
+                    f"Bot Fehler: {e}"
 
                 )
 
 
 
-            # 5 Minuten Candle
+
+
+
+
+            # 5 Minuten
 
             time.sleep(
 
@@ -254,8 +258,138 @@ class TradingBot:
 
 
 
+
     # ==========================
-    # STOP BOT
+    # BUY
+    # ==========================
+
+    def buy_trade(self):
+
+
+        amount = self.risk.get_trade_amount()
+
+
+
+        if not self.risk.allowed_trade(
+
+            amount
+
+        ):
+
+
+            return
+
+
+
+
+        trade = self.trader.buy(
+
+            amount
+
+        )
+
+
+
+        if trade:
+
+
+            print(
+
+                "🟢 BUY ausgeführt"
+
+            )
+
+
+
+
+
+
+
+    # ==========================
+    # SELL
+    # ==========================
+
+    def sell_trade(self):
+
+
+        if self.trader.btc_amount <= 0:
+
+
+            return
+
+
+
+
+        trade = self.trader.sell(
+
+            self.trader.btc_amount
+
+        )
+
+
+
+        if trade:
+
+
+            print(
+
+                "🔴 SELL ausgeführt"
+
+            )
+
+
+
+
+
+
+
+    # ==========================
+    # AUTO TRADE ON
+    # ==========================
+
+    def enable_auto_trade(self):
+
+
+        self.auto_trade = True
+
+
+
+        print(
+
+            "⚡ Auto Trading aktiviert"
+
+        )
+
+
+
+
+
+
+    # ==========================
+    # AUTO TRADE OFF
+    # ==========================
+
+    def disable_auto_trade(self):
+
+
+        self.auto_trade = False
+
+
+
+        print(
+
+            "⛔ Auto Trading deaktiviert"
+
+        )
+
+
+
+
+
+
+
+    # ==========================
+    # STOP
     # ==========================
 
     def stop(self):
@@ -264,8 +398,9 @@ class TradingBot:
         self.running = False
 
 
-        self.logger.info(
 
-            "🔴 Trading gestoppt"
+        print(
+
+            "🔴 Trading Bot gestoppt"
 
         )

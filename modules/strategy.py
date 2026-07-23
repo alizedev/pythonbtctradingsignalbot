@@ -1,157 +1,21 @@
+import pandas as pd
+
+
 class Strategy:
 
 
     def __init__(self):
 
-        self.last_signal = "WAIT"
-
-
-
-
-
-    # ==========================
-    # SIMPLE EMA
-    # ==========================
-
-    def ema(
-        self,
-        prices,
-        period
-    ):
-
-
-        if len(prices) < period:
-
-            return None
-
-
-
-        multiplier = 2 / (period + 1)
-
-
-
-        ema = prices[0]
-
-
-
-        for price in prices[1:]:
-
-
-            ema = (
-
-                (price - ema)
-
-                *
-
-                multiplier
-
-            ) + ema
-
-
-
-        return ema
-
+        self.last_score = 0
 
 
 
 
     # ==========================
-    # RSI
+    # ANALYSE
     # ==========================
 
-    def rsi(
-        self,
-        prices,
-        period=14
-    ):
-
-
-        if len(prices) <= period:
-
-            return 50
-
-
-
-        gains = 0
-
-        losses = 0
-
-
-
-        for i in range(
-
-            len(prices)-period,
-
-            len(prices)
-
-        ):
-
-
-            change = (
-
-                prices[i]
-
-                -
-
-                prices[i-1]
-
-            )
-
-
-
-            if change > 0:
-
-                gains += change
-
-
-            else:
-
-                losses += abs(change)
-
-
-
-
-
-        if losses == 0:
-
-            return 100
-
-
-
-        rs = gains / losses
-
-
-
-        return (
-
-            100
-
-            -
-
-            (
-
-                100 /
-
-                (1 + rs)
-
-            )
-
-        )
-
-
-
-
-
-
-
-    # ==========================
-    # SIGNAL
-    # ==========================
-
-    def analyze(
-        self,
-        candles
-    ):
+    def analyze(self, candles):
 
 
         if len(candles) < 50:
@@ -160,110 +24,201 @@ class Strategy:
 
 
 
-
-        prices = [
-
-            c["close"]
-
-            for c in candles
-
-        ]
+        df = pd.DataFrame(candles)
 
 
 
-        price = prices[-1]
+        score = 0
 
 
 
-        ema20 = self.ema(
 
-            prices[-50:],
+        # EMA
 
-            20
+        df["ema20"] = (
+
+            df["close"]
+
+            .ewm(span=20)
+
+            .mean()
+
+        )
+
+
+        df["ema50"] = (
+
+            df["close"]
+
+            .ewm(span=50)
+
+            .mean()
 
         )
 
 
 
-        ema50 = self.ema(
+        if df.iloc[-1]["ema20"] > df.iloc[-1]["ema50"]:
 
-            prices,
+            score += 30
 
-            50
+
+
+
+        # RSI
+
+        delta = df["close"].diff()
+
+
+        gain = delta.clip(lower=0)
+
+        loss = -delta.clip(upper=0)
+
+
+
+        avg_gain = gain.rolling(14).mean()
+
+        avg_loss = loss.rolling(14).mean()
+
+
+
+        rs = avg_gain / avg_loss
+
+
+        df["rsi"] = 100 - (
+
+            100 / (1 + rs)
 
         )
 
 
 
-        rsi = self.rsi(
+        rsi = df.iloc[-1]["rsi"]
 
-            prices
+
+
+        if rsi < 40:
+
+            score += 20
+
+
+        elif rsi > 70:
+
+            score -= 20
+
+
+
+
+
+
+        # MACD
+
+        ema12 = (
+
+            df["close"]
+
+            .ewm(span=12)
+
+            .mean()
+
+        )
+
+
+        ema26 = (
+
+            df["close"]
+
+            .ewm(span=26)
+
+            .mean()
 
         )
 
 
 
+        macd = ema12 - ema26
 
 
-        # ==================
-        # BUY CONDITIONS
-        # ==================
+
+        if macd.iloc[-1] > 0:
+
+            score += 20
+
+
+
+
+
+
+        # Volume
+
+        avg_volume = (
+
+            df["volume"]
+
+            .rolling(20)
+
+            .mean()
+
+        )
+
+
+        if df.iloc[-1]["volume"] > avg_volume.iloc[-1]:
+
+            score += 15
+
+
+
+
+
+
+        # Candle Richtung
 
         if (
 
-            price > ema20
+            df.iloc[-1]["close"]
 
-            and
+            >
 
-            ema20 > ema50
-
-            and
-
-            rsi < 70
+            df.iloc[-1]["open"]
 
         ):
 
+            score += 15
 
-            self.last_signal = "BUY"
 
+
+
+
+        self.last_score = score
+
+
+
+
+
+        if score >= 80:
 
             return "BUY"
 
 
 
-
-
-
-        # ==================
-        # SELL CONDITIONS
-        # ==================
-
-        if (
-
-            price < ema20
-
-            and
-
-            ema20 < ema50
-
-            and
-
-            rsi > 30
-
-        ):
-
-
-            self.last_signal = "SELL"
-
+        elif score <= 20:
 
             return "SELL"
 
 
 
+        else:
+
+            return "WAIT"
 
 
 
-        self.last_signal = "WAIT"
 
 
-        return "WAIT"
+    # ==========================
+    # SCORE
+    # ==========================
+
+    def get_score(self):
+
+        return self.last_score

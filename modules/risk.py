@@ -3,48 +3,235 @@ class RiskManager:
 
     def __init__(self):
 
-        self.max_trade_usdt = 10
 
-        self.stop_loss = 0.02
+        # Startkapital Paper Trading
 
-        self.take_profit = 0.04
-
+        self.balance = 500.0
 
 
-    def calculate_amount(self, balance):
+        # maximaler Einsatz pro Trade
 
-        if balance < self.max_trade_usdt:
-
-            return balance
+        self.trade_percent = 2.0
 
 
-        return self.max_trade_usdt
+        # Verlustgrenze
+
+        self.stop_loss_percent = 2.5
+
+
+        # Gewinnziel
+
+        self.take_profit_percent = 5.0
 
 
 
-    def check_exit(
+
+
+
+
+    # ==========================
+    # TRADE AMOUNT
+    # ==========================
+
+    def get_trade_amount(self):
+
+
+        amount = (
+
+            self.balance
+
+            *
+
+            (
+
+                self.trade_percent
+
+                /
+
+                100
+
+            )
+
+        )
+
+
+
+        return round(
+
+            amount,
+
+            2
+
+        )
+
+
+
+
+
+
+
+    # ==========================
+    # STOP LOSS
+    # ==========================
+
+    def calculate_stop_loss(
+
         self,
-        entry,
-        current
+
+        entry_price
+
     ):
 
 
-        change = (
-            current-entry
-        ) / entry
+        return round(
+
+            entry_price
+
+            *
+
+            (
+
+                1
+
+                -
+
+                self.stop_loss_percent / 100
+
+            ),
+
+            2
+
+        )
 
 
 
-        if change <= -self.stop_loss:
-
-            return "STOP_LOSS"
 
 
 
-        if change >= self.take_profit:
 
-            return "TAKE_PROFIT"
+    # ==========================
+    # TAKE PROFIT
+    # ==========================
+
+    def calculate_take_profit(
+
+        self,
+
+        entry_price
+
+    ):
+
+
+        return round(
+
+            entry_price
+
+            *
+
+            (
+
+                1
+
+                +
+
+                self.take_profit_percent / 100
+
+            ),
+
+            2
+
+        )
 
 
 
-        return "HOLD"
+
+
+
+
+    # ==========================
+    # CHECK POSITION
+    # ==========================
+
+    def allowed_trade(
+
+        self,
+
+        amount
+
+    ):
+
+
+        if amount <= 0:
+
+
+            return False
+
+
+
+        if amount > self.balance:
+
+
+            return False
+
+
+
+
+        return True
+
+
+
+
+
+
+
+    # ==========================
+    # UPDATE BALANCE
+    # ==========================
+
+    def update_balance(
+
+        self,
+
+        value
+
+    ):
+
+
+        self.balance += value
+
+
+
+
+
+
+    # ==========================
+    # STATUS
+    # ==========================
+
+    def get_status(self):
+
+
+        return {
+
+
+            "balance":
+
+            self.balance,
+
+
+            "trade_size":
+
+            self.get_trade_amount(),
+
+
+            "stop_loss":
+
+            self.stop_loss_percent,
+
+
+            "take_profit":
+
+            self.take_profit_percent
+
+
+        }
