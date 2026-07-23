@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QLabel,
     QPushButton,
     QTabWidget,
@@ -18,10 +19,16 @@ from PyQt6.QtWidgets import (
     QHeaderView
 )
 
-from PyQt6.QtCore import QTimer, pyqtSlot
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtGui import QFont, QColor
+
 
 from modules.binance import BinanceModule
+from modules.strategy import Strategy
+from modules.trader import Trader
+from modules.bot import TradingBot
+from modules.risk import RiskManager
+
 from candlestick import CandlestickItem
 
 
@@ -35,20 +42,48 @@ class Dashboard(QMainWindow):
         super().__init__()
 
 
-
         self.setWindowTitle(
-            "₿ Binance BTC Trading Terminal"
+            "₿ Bitcoin Trading Terminal"
         )
 
 
         self.resize(
-            1400,
-            900
+            1100,
+            700
         )
 
 
 
         self.binance = BinanceModule()
+
+
+
+        self.strategy = Strategy()
+
+
+        self.trader = Trader(
+
+            self.binance,
+
+            paper=True
+
+        )
+
+
+        self.risk = RiskManager()
+
+
+
+        self.bot = TradingBot(
+
+            self.strategy,
+
+            self.trader,
+
+            self.risk
+
+        )
+
 
 
         self.candles = []
@@ -59,13 +94,15 @@ class Dashboard(QMainWindow):
 
 
 
-        self.load_chart_data()
+        self.load_chart()
 
 
 
-    # =================================
-    # UI
-    # =================================
+
+
+    # ==========================
+    # CREATE UI
+    # ==========================
 
     def create_ui(self):
 
@@ -78,18 +115,10 @@ class Dashboard(QMainWindow):
 
             self.dashboard_tab(),
 
-            "📊 Dashboard"
+            "📈 Dashboard"
 
         )
 
-
-        tabs.addTab(
-
-            self.binance_tab(),
-
-            "🔑 Binance"
-
-        )
 
 
         tabs.addTab(
@@ -97,6 +126,16 @@ class Dashboard(QMainWindow):
             self.trades_tab(),
 
             "📜 Trades"
+
+        )
+
+
+
+        tabs.addTab(
+
+            self.binance_tab(),
+
+            "🔑 Binance"
 
         )
 
@@ -115,9 +154,9 @@ class Dashboard(QMainWindow):
 
 
 
-    # =================================
-    # DASHBOARD
-    # =================================
+    # ==========================
+    # DASHBOARD TAB
+    # ==========================
 
     def dashboard_tab(self):
 
@@ -128,10 +167,15 @@ class Dashboard(QMainWindow):
         layout = QVBoxLayout()
 
 
+        layout.setSpacing(
+            8
+        )
+
+
 
         self.price_label = QLabel(
 
-            "₿ BTCUSDT\nLoading..."
+            "₿ BTCUSDT Loading..."
 
         )
 
@@ -142,11 +186,12 @@ class Dashboard(QMainWindow):
 
                 "Arial",
 
-                22
+                18
 
             )
 
         )
+
 
 
         layout.addWidget(
@@ -157,6 +202,77 @@ class Dashboard(QMainWindow):
 
 
 
+        buttons = QHBoxLayout()
+
+
+
+        self.start_button = QPushButton(
+
+            "🟢 Trading starten"
+
+        )
+
+
+        self.stop_button = QPushButton(
+
+            "🔴 Trading stoppen"
+
+        )
+
+
+
+        self.start_button.clicked.connect(
+
+            self.start_trading
+
+        )
+
+
+        self.stop_button.clicked.connect(
+
+            self.stop_trading
+
+        )
+
+
+
+        buttons.addWidget(
+
+            self.start_button
+
+        )
+
+
+        buttons.addWidget(
+
+            self.stop_button
+
+        )
+
+
+
+        layout.addLayout(
+
+            buttons
+
+        )
+
+
+
+        self.signal_label = QLabel(
+
+            "Signal: WAIT"
+
+        )
+
+
+        layout.addWidget(
+
+            self.signal_label
+
+        )
+
+
 
         self.chart = pg.PlotWidget()
 
@@ -164,7 +280,7 @@ class Dashboard(QMainWindow):
 
         self.chart.setBackground(
 
-            "#050505"
+            "#080808"
 
         )
 
@@ -179,9 +295,10 @@ class Dashboard(QMainWindow):
         )
 
 
+
         self.chart.setTitle(
 
-            "BTCUSDT 5m Live Candles"
+            "BTCUSDT Binance 5m"
 
         )
 
@@ -217,6 +334,14 @@ class Dashboard(QMainWindow):
         )
 
 
+        self.log_box.setMaximumHeight(
+
+            120
+
+        )
+
+
+
         layout.addWidget(
 
             self.log_box
@@ -233,14 +358,9 @@ class Dashboard(QMainWindow):
 
 
         return widget
-
-
-
-
-
-    # =================================
-    # BINANCE
-    # =================================
+    # ==========================
+    # BINANCE TAB
+    # ==========================
 
     def binance_tab(self):
 
@@ -252,20 +372,18 @@ class Dashboard(QMainWindow):
 
 
 
-        group = QGroupBox(
+        box = QGroupBox(
 
-            "🔑 Binance API"
+            "Binance API"
 
         )
 
 
-
-        box = QVBoxLayout()
+        box_layout = QVBoxLayout()
 
 
 
         self.api_key_input = QLineEdit()
-
 
         self.api_key_input.setPlaceholderText(
 
@@ -277,13 +395,11 @@ class Dashboard(QMainWindow):
 
         self.secret_input = QLineEdit()
 
-
         self.secret_input.setPlaceholderText(
 
             "Secret Key"
 
         )
-
 
 
         self.secret_input.setEchoMode(
@@ -294,15 +410,14 @@ class Dashboard(QMainWindow):
 
 
 
-        save = QPushButton(
+        save_button = QPushButton(
 
-            "💾 Save"
+            "💾 API speichern"
 
         )
 
 
-
-        save.clicked.connect(
+        save_button.clicked.connect(
 
             self.save_api
 
@@ -310,135 +425,43 @@ class Dashboard(QMainWindow):
 
 
 
-        box.addWidget(
+        box_layout.addWidget(
 
             self.api_key_input
 
         )
 
 
-        box.addWidget(
+        box_layout.addWidget(
 
             self.secret_input
 
         )
 
 
-        box.addWidget(
+        box_layout.addWidget(
 
-            save
+            save_button
+
+        )
+
+
+        box.setLayout(
+
+            box_layout
 
         )
 
 
 
-        group.setLayout(
+        layout.addWidget(
 
             box
 
         )
 
 
-        layout.addWidget(
-
-            group
-
-        )
-
-
-        widget.setLayout(
-
-            layout
-
-        )
-
-
-        return widget
-
-
-
-
-
-    # =================================
-    # TRADES
-    # =================================
-
-    def trades_tab(self):
-
-
-        widget = QWidget()
-
-
-        layout = QVBoxLayout()
-
-
-
-        self.trade_table = QTableWidget()
-
-
-
-        self.trade_table.setColumnCount(
-
-            5
-
-        )
-
-
-        self.trade_table.setHorizontalHeaderLabels(
-
-            [
-
-            "Symbol",
-
-            "Side",
-
-            "Price",
-
-            "Amount",
-
-            "Fee"
-
-            ]
-
-        )
-
-
-
-        self.trade_table.horizontalHeader().setSectionResizeMode(
-
-            QHeaderView.ResizeMode.Stretch
-
-        )
-
-
-
-        button = QPushButton(
-
-            "🔄 Load Trades"
-
-        )
-
-
-        button.clicked.connect(
-
-            self.load_trades
-
-        )
-
-
-
-        layout.addWidget(
-
-            self.trade_table
-
-        )
-
-
-        layout.addWidget(
-
-            button
-
-        )
+        layout.addStretch()
 
 
 
@@ -456,41 +479,60 @@ class Dashboard(QMainWindow):
 
 
 
-    # =================================
-    # LOAD CANDLES
-    # =================================
+    # ==========================
+    # LOAD CHART
+    # ==========================
 
-    def load_chart_data(self):
-
-
-        self.candles = self.binance.load_candles()
+    def load_chart(self):
 
 
+        try:
 
-        self.candle_item.setData(
 
-            self.candles
-
-        )
+            self.candles = self.binance.load_candles()
 
 
 
-        self.binance.start_live_candles(
+            self.candle_item.setData(
 
-            self.update_live_candle
+                self.candles
 
-        )
-
-
+            )
 
 
 
-    # =================================
-    # LIVE UPDATE
-    # =================================
+            self.binance.start_live_candles(
+
+                self.update_candle
+
+            )
+
+
+            self.update_price()
+
+
+
+        except Exception as e:
+
+
+            self.log_message(
+
+                f"Chart Fehler: {e}"
+
+            )
+
+
+
+
+
+
+
+    # ==========================
+    # UPDATE CANDLE
+    # ==========================
 
     @pyqtSlot(object)
-    def update_live_candle(
+    def update_candle(
 
         self,
 
@@ -524,94 +566,54 @@ class Dashboard(QMainWindow):
         )
 
 
-
-        self.price_label.setText(
-
-            f"""
-₿ BTCUSDT LIVE
-
-💵 ${candle['close']:,.2f}
-
-🕯 Binance 5 Minute Candle
-"""
-
-        )
-
-
-
-
-
-    # =================================
-    # TRADES
-    # =================================
-
-    def load_trades(self):
-
-
-        trades = self.binance.get_trades()
-
-
-
-        self.trade_table.setRowCount(
-
-            len(trades)
-
-        )
-
-
-
-        for row, trade in enumerate(trades):
-
-
-            data = [
-
-                "BTCUSDT",
-
-                "BUY" if trade["isBuyer"] else "SELL",
-
-                trade["price"],
-
-                trade["qty"],
-
-                trade["commission"]
-
-            ]
-
-
-
-            for col,value in enumerate(data):
-
-
-                self.trade_table.setItem(
-
-                    row,
-
-                    col,
-
-                    QTableWidgetItem(
-
-                        str(value)
-
-                    )
-
-                )
-
-
-
-        self.log_message(
-
-            f"✅ {len(trades)} Trades geladen"
-
-        )
+        self.update_price()
 
 
 
 
 
 
-    # =================================
+
+    # ==========================
+    # CURRENT BTC PRICE
+    # ==========================
+
+    def update_price(self):
+
+
+        try:
+
+
+            price = self.binance.get_btc_price()
+
+
+
+            self.price_label.setText(
+
+                f"₿ BTCUSDT   ${price:,.2f}"
+
+            )
+
+
+
+        except Exception as e:
+
+
+            self.log_message(
+
+                f"Preis Fehler: {e}"
+
+            )
+
+
+
+
+
+
+
+    # ==========================
     # SAVE API
-    # =================================
+    # ==========================
 
     def save_api(self):
 
@@ -625,31 +627,39 @@ class Dashboard(QMainWindow):
         )
 
 
+
+        data = {
+
+
+            "key":
+
+            self.api_key_input.text(),
+
+
+            "secret":
+
+            self.secret_input.text()
+
+
+        }
+
+
+
+
         with open(
 
             "data/binance.json",
 
             "w"
 
-        ) as file:
+        ) as f:
 
 
             json.dump(
 
-                {
+                data,
 
-                "api_key":
-
-                self.api_key_input.text(),
-
-
-                "secret":
-
-                self.secret_input.text()
-
-                },
-
-                file,
+                f,
 
                 indent=4
 
@@ -657,60 +667,519 @@ class Dashboard(QMainWindow):
 
 
 
+        self.binance.load_api()
+
+
+
         self.log_message(
 
-            "✅ API gespeichert"
+            "✅ Binance API gespeichert"
+
+        )
+    # ==========================
+    # TRADES TAB
+    # ==========================
+
+    def trades_tab(self):
+
+
+        widget = QWidget()
+
+
+        layout = QVBoxLayout()
+
+
+
+        self.trade_table = QTableWidget()
+
+
+
+        self.trade_table.setColumnCount(
+
+            5
 
         )
 
 
 
+        self.trade_table.setHorizontalHeaderLabels(
 
+            [
 
+                "Coin",
 
-    def log_message(self,text):
+                "Side",
 
+                "Price",
 
-        print(text)
+                "Amount",
 
+                "Fee"
 
-        self.log_box.append(
-
-            text
+            ]
 
         )
 
 
 
+        self.trade_table.horizontalHeader().setSectionResizeMode(
+
+            QHeaderView.ResizeMode.Stretch
+
+        )
 
 
-    # =================================
-    # CLEAN SHUTDOWN
-    # =================================
 
-    def closeEvent(self,event):
+        self.trade_table.verticalHeader().setVisible(
+
+            False
+
+        )
+
+
+
+        self.trade_table.setAlternatingRowColors(
+
+            True
+
+        )
+
+
+
+        self.trade_table.setSelectionBehavior(
+
+            QTableWidget.SelectionBehavior.SelectRows
+
+        )
+
+
+
+        layout.addWidget(
+
+            self.trade_table
+
+        )
+
+
+
+        load_button = QPushButton(
+
+            "🔄 Trades laden"
+
+        )
+
+
+        load_button.clicked.connect(
+
+            self.load_trades
+
+        )
+
+
+        layout.addWidget(
+
+            load_button
+
+        )
+
+
+
+        widget.setLayout(
+
+            layout
+
+        )
+
+
+
+        return widget
+
+
+
+
+
+
+
+    # ==========================
+    # LOAD LOCAL TRADES
+    # ==========================
+
+    def load_trades(self):
+
+
+        file = "trades.json"
+
+
+
+        if not os.path.exists(file):
+
+
+            self.log_message(
+
+                "⚠ trades.json nicht gefunden"
+
+            )
+
+
+            return
+
+
 
 
         try:
 
-            self.binance.stop_websocket()
 
 
-        except:
+            with open(
 
-            pass
+                file,
 
+                "r"
 
-
-        event.accept()
-
-
+            ) as f:
 
 
 
-    # =================================
-    # STYLE
-    # =================================
+                trades = json.load(f)
+
+
+
+
+
+            self.trade_table.setRowCount(
+
+                len(trades)
+
+            )
+
+
+
+
+
+            for row, trade in enumerate(trades):
+
+
+
+                coin = trade.get(
+
+                    "coin",
+
+                    "₿ BTC"
+
+                )
+
+
+
+                side = trade.get(
+
+                    "side",
+
+                    "-"
+
+                )
+
+
+
+                price = float(
+
+                    trade.get(
+
+                        "price",
+
+                        0
+
+                    )
+
+                )
+
+
+
+                amount = float(
+
+                    trade.get(
+
+                        "amount",
+
+                        0
+
+                    )
+
+                )
+
+
+
+                fee = float(
+
+                    trade.get(
+
+                        "fee",
+
+                        0
+
+                    )
+
+                )
+
+
+
+
+                values = [
+
+                    coin,
+
+
+                    side,
+
+
+                    f"${price:,.2f}",
+
+
+                    f"{amount:.6f} BTC",
+
+
+                    f"{fee:.4f} USDT"
+
+
+                ]
+
+
+
+
+
+                for col,value in enumerate(values):
+
+
+                    item = QTableWidgetItem(
+
+                        value
+
+                    )
+
+
+
+                    self.trade_table.setItem(
+
+                        row,
+
+                        col,
+
+                        item
+
+                    )
+
+
+
+
+
+
+
+                # BUY / SELL Farbe
+
+
+
+                side_item = self.trade_table.item(
+
+                    row,
+
+                    1
+
+                )
+
+
+
+                if side.upper() == "BUY":
+
+
+
+                    side_item.setForeground(
+
+                        QColor(
+
+                            "#00ff88"
+
+                        )
+
+                    )
+
+
+
+                elif side.upper() == "SELL":
+
+
+
+                    side_item.setForeground(
+
+                        QColor(
+
+                            "#ff5555"
+
+                        )
+
+                    )
+
+
+
+
+
+
+
+            self.log_message(
+
+                f"✅ {len(trades)} Trades geladen"
+
+            )
+
+
+
+        except Exception as e:
+
+
+
+            self.log_message(
+
+                f"❌ Trade Fehler: {e}"
+
+            )
+    # ==========================
+    # START TRADING
+    # ==========================
+
+    def start_trading(self):
+
+
+        self.bot.start(
+
+            lambda:
+
+            self.candles,
+
+            self.update_signal
+
+        )
+
+
+        self.log_message(
+
+            "🟢 Trading Bot gestartet"
+
+        )
+
+
+
+
+    # ==========================
+    # STOP TRADING
+    # ==========================
+
+    def stop_trading(self):
+
+
+        self.bot.stop()
+
+
+        self.log_message(
+
+            "🔴 Trading Bot gestoppt"
+
+        )
+
+
+
+
+
+    # ==========================
+    # SIGNAL UPDATE
+    # ==========================
+
+    def update_signal(
+
+        self,
+
+        signal
+
+    ):
+
+
+        self.signal_label.setText(
+
+            f"Signal: {signal}"
+
+        )
+
+
+
+        if signal == "BUY":
+
+
+            self.signal_label.setStyleSheet(
+
+                "color:#00ff88;font-weight:bold"
+
+            )
+
+
+
+        elif signal == "SELL":
+
+
+            self.signal_label.setStyleSheet(
+
+                "color:#ff5555;font-weight:bold"
+
+            )
+
+
+
+        else:
+
+
+            self.signal_label.setStyleSheet(
+
+                "color:white"
+
+            )
+
+
+
+
+
+
+
+    # ==========================
+    # DEBUG LOG
+    # ==========================
+
+    def log_message(
+
+        self,
+
+        message
+
+    ):
+
+
+        self.log_box.append(
+
+            str(message)
+
+        )
+
+
+        print(
+
+            message
+
+        )
+
+
+
+
+
+
+
+    # ==========================
+    # DARK BITCOIN STYLE
+    # ==========================
 
     def apply_style(self):
 
@@ -719,45 +1188,179 @@ class Dashboard(QMainWindow):
 
         """
 
+        QMainWindow {
+
+            background:#0b0e11;
+
+        }
+
+
         QWidget {
 
-            background:#0b0f14;
+            color:#ffffff;
 
-            color:white;
+            font-size:13px;
+
+        }
+
+
+        QLabel {
+
+            color:#f7931a;
 
         }
 
 
         QPushButton {
 
+
+            background:#f7931a;
+
+            color:#000000;
+
+            border-radius:8px;
+
+            padding:8px;
+
+            font-weight:bold;
+
+
+        }
+
+
+        QPushButton:hover {
+
+
+            background:#ffb347;
+
+        }
+
+
+
+
+        QTabWidget::pane {
+
+
+            border:1px solid #333;
+
+
+        }
+
+
+
+        QTabBar::tab {
+
+
+            background:#161b22;
+
+            padding:10px;
+
+        }
+
+
+
+        QTabBar::tab:selected {
+
+
             background:#f7931a;
 
             color:black;
 
-            padding:10px;
+        }
 
-            border-radius:8px;
+
+
+        QTextEdit {
+
+
+            background:#050505;
+
+            border:1px solid #333;
+
+        }
+
+
+
+
+        QTableWidget {
+
+
+            background:#111820;
+
+            alternate-background-color:#161b22;
+
+            gridline-color:#333;
+
+        }
+
+
+
+        QHeaderView::section {
+
+
+            background:#161b22;
+
+            color:#f7931a;
+
+            padding:8px;
+
+            border:none;
 
         }
 
 
         QLineEdit {
 
-            background:#161b22;
+
+            background:#111820;
+
+            border:1px solid #444;
+
+            padding:6px;
 
             color:white;
 
-            padding:8px;
-
         }
 
-
-        QTableWidget {
-
-            background:#010409;
-
-        }
 
         """
 
         )
+
+
+
+
+
+
+
+    # ==========================
+    # CLOSE
+    # ==========================
+
+    def closeEvent(
+
+        self,
+
+        event
+
+    ):
+
+
+        try:
+
+
+            self.bot.stop()
+
+
+            self.binance.stop_websocket()
+
+
+
+        except Exception:
+
+
+            pass
+
+
+
+        event.accept()

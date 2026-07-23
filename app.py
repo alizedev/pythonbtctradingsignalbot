@@ -29,6 +29,6 @@ class TradingBotApp:
 
 if __name__ == "__main__":
 
-    application = TradingBotApp()
+    app = TradingBotApp()
 
-    application.run()
+    app.run()

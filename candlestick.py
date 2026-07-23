@@ -1,6 +1,7 @@
+from PyQt6 import QtCore, QtGui
+
 import pyqtgraph as pg
 
-from PyQt6 import QtCore, QtGui
 
 
 
@@ -11,32 +12,25 @@ class CandlestickItem(pg.GraphicsObject):
 
         super().__init__()
 
-
         self.data = []
-
 
         self.picture = QtGui.QPicture()
 
 
 
     # ==========================
-    # UPDATE DATA
+    # UPDATE
     # ==========================
 
     def setData(self, data):
 
-
         self.data = data
-
 
         self.generatePicture()
 
-
         self.prepareGeometryChange()
 
-
         self.update()
-
 
 
 
@@ -73,49 +67,34 @@ class CandlestickItem(pg.GraphicsObject):
 
             if close >= open_price:
 
-
                 color = QtGui.QColor(
-
-                    "#00ff88"
-
+                    "#00e676"
                 )
 
 
             else:
 
-
                 color = QtGui.QColor(
-
-                    "#ff3355"
-
+                    "#ff5252"
                 )
 
 
 
-
-            pen = QtGui.QPen(
-
-                color
-
-            )
-
-
-            pen.setWidth(
-
-                2
-
-            )
-
-
             painter.setPen(
 
-                pen
+                QtGui.QPen(
+
+                    color,
+
+                    0.7
+
+                )
 
             )
 
 
 
-            # Wick
+            # Wick (dünn)
 
             painter.drawLine(
 
@@ -139,9 +118,10 @@ class CandlestickItem(pg.GraphicsObject):
 
 
 
+            # Candle Body schmal
 
+            body_width = 0.25
 
-            # Body
 
             body_height = abs(
 
@@ -150,25 +130,22 @@ class CandlestickItem(pg.GraphicsObject):
             )
 
 
-
             if body_height < 1:
-
 
                 body_height = 1
 
 
 
-
             rect = QtCore.QRectF(
 
-                index - 0.35,
+                index - body_width / 2,
 
                 min(
                     open_price,
                     close
                 ),
 
-                0.7,
+                body_width,
 
                 body_height
 
@@ -185,8 +162,6 @@ class CandlestickItem(pg.GraphicsObject):
 
 
         painter.end()
-
-
 
 
 
@@ -221,10 +196,8 @@ class CandlestickItem(pg.GraphicsObject):
 
 
 
-
-
     # ==========================
-    # BOUNDS
+    # BOUNDING BOX
     # ==========================
 
     def boundingRect(self):
@@ -239,9 +212,9 @@ class CandlestickItem(pg.GraphicsObject):
 
         lows = [
 
-            c["low"]
+            candle["low"]
 
-            for c in self.data
+            for candle in self.data
 
         ]
 
@@ -249,9 +222,9 @@ class CandlestickItem(pg.GraphicsObject):
 
         highs = [
 
-            c["high"]
+            candle["high"]
 
-            for c in self.data
+            for candle in self.data
 
         ]
 
