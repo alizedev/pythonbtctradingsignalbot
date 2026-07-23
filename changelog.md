@@ -1,61 +1,40 @@
-# Changelog
+# Database Changelog
 
-All notable changes are documented here.
-
----
 
 # Version 1.0.0
 
-Release Date:
-2026-07-23
 
-## Added
+## Table: trades
 
-### Dashboard
 
-* PyQt6 dark mode interface
-* Portfolio overview
-* Trading control panel
+Stores Binance trade information.
 
-### Binance
 
-* API connection
-* Wallet reading
-* Market price fetching
+| Column | Type | Description |
+|-|-|-|
+| id | INTEGER | Binance trade ID |
+| symbol | STRING | BTCUSDT |
+| side | STRING | BUY / SELL |
+| price | DOUBLE | Trade price |
+| quantity | DOUBLE | BTC amount |
+| profit_loss | DOUBLE | Profit |
+| roi | DOUBLE | ROI % |
+| created_at | TIMESTAMP | Date |
 
-### Modular System
-
-Added switchable modules:
-
-* Binance Module
-* Trading Module
-* Signal Module
-* Database Module
-* Telegram Module
-* Docker Module
-
-### Docker
-
-Added:
-
-* Dockerfile
-* docker-compose.yml
-* automatic restart
-* Linux server support
-
-## Security
-
-* API keys moved to `.env`
-* Withdraw permissions not required
-* Paper trading enabled by default
 
 ---
 
-# Version 0.9.0
+## Example
 
-## Added
 
-* Initial BTC signal engine
-* Basic GUI
-* Portfolio models
-* Candle and trade models
+```json
+{
+"id":12345,
+"symbol":"BTCUSDT",
+"side":"BUY",
+"price":67420.50,
+"quantity":0.01,
+"profit_loss":50,
+"roi":2.4
+}
+```

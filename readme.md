@@ -4,28 +4,35 @@
 ![PyQt6](https://img.shields.io/badge/GUI-PyQt6-green)
 ![Binance](https://img.shields.io/badge/API-Binance-yellow)
 ![Docker](https://img.shields.io/badge/Docker-Supported-blue)
+![ARM64](https://img.shields.io/badge/Raspberry%20Pi%205-ARM64-red)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 
 ---
 
 # 📌 Overview
 
-The **Python BTC Trading Signal Bot** is a modular Bitcoin trading dashboard.
+The **Python BTC Trading Signal Bot** is a modular Bitcoin trading dashboard with Binance integration.
 
-The application combines:
+The project provides a complete monitoring environment for Bitcoin prices, trades and portfolio information.
 
-- ₿ Bitcoin price tracking
-- 📊 Trading dashboard
-- 🔑 Binance API integration
-- 📜 Live Binance trades
-- 💰 Portfolio tracking
-- 🤖 Trading controls
+Designed for:
+
+- 🖥 Desktop usage
 - 🐳 Docker deployment
+- 🍓 Raspberry Pi 5 24/7 operation
+- 🐧 Linux servers
+
 
 ---
 
 # ✨ Features
 
-## 📊 Dashboard
+
+## 📊 Trading Dashboard
+
+Modern PyQt6 dark interface.
+
 
 Displays:
 
@@ -45,35 +52,68 @@ $1,250.00
 WAIT
 ```
 
+
+Features:
+
+- Dark Mode
+- Live price display
+- Portfolio overview
+- Trading controls
+- Market monitoring
+
+
+
 ---
 
-## 🔑 Binance Integration
+# 🔑 Binance Integration
+
+
+Connected through Binance API.
+
 
 Supported:
 
-- API Key authentication
-- Secret Key authentication
+- API authentication
 - BTCUSDT ticker
 - Account balance
 - Trade history
 - Market data
+- Trading interface
 
 
-Binance permissions:
+
+## Binance Security
+
+
+Recommended permissions:
 
 ```
-✅ Read Permission
+✅ Read permission
 
 ✅ Spot Trading (optional)
 
 ❌ Withdraw disabled
 ```
 
+
+Never share:
+
+```
+API Secret Key
+```
+
+
+
 ---
 
-# 📜 Trade History
+# 📜 Binance Trade History
 
-Live Binance trades:
+
+The dashboard displays Binance trades.
+
+
+Table:
+
 
 ```
 🆔 ID
@@ -91,7 +131,9 @@ Live Binance trades:
 ⏰ Time
 ```
 
+
 Example:
+
 
 ```
 🆔 12345
@@ -109,18 +151,14 @@ Example:
 ⏰ 2026-07-23
 ```
 
+
 ---
 
-# 🖥 GUI
-
-Built with:
-
-- Python 3
-- PyQt6
-- Dark Mode
+# 🖥 Application Interface
 
 
 Tabs:
+
 
 ```
 📊 Dashboard
@@ -132,9 +170,20 @@ Tabs:
 📜 Trades
 ```
 
+
+Technology:
+
+- Python 3
+- PyQt6
+- Binance API
+- JSON Storage
+- Docker
+
+
 ---
 
 # 📂 Project Structure
+
 
 ```
 pythonbtctradingsignalbot
@@ -152,6 +201,7 @@ pythonbtctradingsignalbot
 │   └── trades.json
 │
 ├── Dockerfile
+├── docker-compose.yml
 ├── requirements.txt
 │
 ├── README.md
@@ -160,11 +210,28 @@ pythonbtctradingsignalbot
 └── dbchangelog.md
 ```
 
+
 ---
 
 # ⚙ Installation
 
-## Clone
+
+## Requirements
+
+
+Install:
+
+
+- Python 3.11+
+- pip
+- Git
+
+
+
+---
+
+# Clone Repository
+
 
 ```bash
 git clone https://github.com/alizedev/pythonbtctradingsignalbot.git
@@ -172,103 +239,441 @@ git clone https://github.com/alizedev/pythonbtctradingsignalbot.git
 cd pythonbtctradingsignalbot
 ```
 
+
+
 ---
 
-## Virtual Environment
+# Python Virtual Environment
+
+
+Create:
+
 
 ```bash
 python3 -m venv .venv
 ```
 
+
 Activate:
 
-macOS/Linux:
+
+## macOS / Linux
+
 
 ```bash
 source .venv/bin/activate
 ```
 
-Windows:
+
+## Windows
+
 
 ```bash
 .venv\Scripts\activate
 ```
 
+
+
 ---
 
-# 📦 Install Requirements
+# Install Dependencies
+
 
 ```bash
 pip install -r requirements.txt
 ```
 
+
+
 ---
 
-# 🔑 Binance Setup
+# 🔑 Binance Configuration
+
 
 Create:
+
 
 ```
 data/binance.json
 ```
 
-Content:
+
+Example:
+
 
 ```json
 {
-    "api_key":"YOUR_API_KEY",
-    "secret_key":"YOUR_SECRET_KEY"
+    "api_key":"YOUR_BINANCE_API_KEY",
+    "secret_key":"YOUR_BINANCE_SECRET_KEY"
 }
 ```
 
-Never upload this file.
 
-Add to:
+Security:
+
+
+Add:
+
+
+```
+data/binance.json
+```
+
+
+to:
+
 
 ```
 .gitignore
 ```
 
+
+
 ---
 
-# ▶ Start
+# ▶ Start Application
+
+
+Run:
+
 
 ```bash
 python app.py
 ```
 
+
+
 ---
 
-# 🐳 Docker
+# 🐳 Docker Support
 
-Build:
+
+The application supports Docker deployment.
+
+
+Benefits:
+
+
+- Automatic restart
+- Isolated environment
+- Server operation
+- 24/7 runtime
+
+
+
+---
+
+# Docker Build
+
+
+Build image:
+
 
 ```bash
 docker build -t btc-trading-bot .
 ```
 
-Run:
+
+
+---
+
+# Docker Run
+
+
+Start container:
+
 
 ```bash
 docker run -d \
 --name btc-bot \
 --restart always \
+-v $(pwd)/data:/app/data \
 btc-trading-bot
 ```
 
+
+
+Explanation:
+
+
+```
+--restart always
+
+Automatically restarts bot
+
+
+-v data:/app/data
+
+Keeps API keys and trades
+```
+
+
+
+---
+
+# 🍓 Raspberry Pi 5 Setup
+
+
+The bot supports:
+
+
+```
+Raspberry Pi 5
+
+ARM64
+
+Raspberry Pi OS 64-bit
+
+Ubuntu ARM64
+
+Debian ARM64
+```
+
+
+
+Recommended hardware:
+
+
+```
+Raspberry Pi 5
+
+8GB RAM
+
+128GB SSD
+
+Active Cooling
+```
+
+
+
+---
+
+# Install Docker on Raspberry Pi
+
+
+Update:
+
+
+```bash
+sudo apt update
+
+sudo apt upgrade -y
+```
+
+
+Install Docker:
+
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+
+Add user:
+
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+
+Restart:
+
+
+```bash
+sudo reboot
+```
+
+
+
+Check:
+
+
+```bash
+docker --version
+```
+
+
+
+---
+
+# Raspberry Pi Deployment
+
+
+Clone project:
+
+
+```bash
+git clone https://github.com/alizedev/pythonbtctradingsignalbot.git
+
+cd pythonbtctradingsignalbot
+```
+
+
+
+Create data folder:
+
+
+```bash
+mkdir data
+```
+
+
+
+Add Binance keys:
+
+
+```
+data/binance.json
+```
+
+
+
+---
+
+# Build ARM64 Image
+
+
+```bash
+docker build \
+--platform linux/arm64 \
+-t btc-trading-bot .
+```
+
+
+
+---
+
+# Run Raspberry Pi Container
+
+
+```bash
+docker run -d \
+--name btc-bot \
+--restart always \
+-v $(pwd)/data:/app/data \
+btc-trading-bot
+```
+
+
+
+---
+
+# Docker Compose
+
+
+Start:
+
+
+```bash
+docker compose up -d
+```
+
+
+
+Stop:
+
+
+```bash
+docker compose down
+```
+
+
+
+---
+
+# 📊 Monitoring
+
+
+Container status:
+
+
+```bash
+docker ps
+```
+
+
+Logs:
+
+
+```bash
+docker logs -f btc-bot
+```
+
+
+
+Restart:
+
+
+```bash
+docker restart btc-bot
+```
+
+
+
+---
+
+# 🔄 24/7 Operation
+
+
+Startup sequence:
+
+
+```
+Raspberry Pi Boot
+
+        ↓
+
+Docker Engine
+
+        ↓
+
+BTC Bot Container
+
+        ↓
+
+Binance Connection
+
+        ↓
+
+Price Monitoring
+```
+
+
+
+No monitor required.
+
+
+---
+
+# 🧩 Headless Mode
+
+
+The bot can run without GUI:
+
+
 Supported:
 
-- Linux VPS
+- Linux Server
 - Raspberry Pi
-- Server
-- Cloud VM
+- VPS
+- Home Server
+
+
+Future:
+
+- Web Dashboard
+- Telegram Alerts
+- Remote Control
+
+
 
 ---
 
 # 🛣 Roadmap
 
 
-## v1.0
+# v1.0
 
 ✅ Dashboard
 
@@ -279,32 +684,57 @@ Supported:
 ✅ Trade History
 
 
-## v1.1
+
+# v1.1
+
+⬜ Raspberry Pi 5 Support
+
+⬜ Docker Deployment
+
+⬜ Telegram Notifications
+
+⬜ SQLite Database
+
+
+
+# v1.2
 
 ⬜ RSI Signals
 
 ⬜ MACD
-
-⬜ Moving Average
-
-⬜ Telegram Alerts
-
-
-## v1.2
-
-⬜ Database
 
 ⬜ Backtesting
 
 ⬜ Automated Trading
 
 
+
 ---
 
 # ⚠ Disclaimer
 
-Educational project only.
 
-Crypto trading contains financial risks.
+This project is for educational purposes only.
+
+
+Cryptocurrency trading involves financial risk.
+
 
 Never trade money you cannot afford to lose.
+
+
+---
+
+# 👨‍💻 Author
+
+
+Created by:
+
+**alizedev**
+
+
+GitHub:
+
+```
+https://github.com/alizedev
+```
