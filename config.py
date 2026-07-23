@@ -1,13 +1,9 @@
-# config.py
+# Binance API
 
-# Demo BTC Price
-BTC_PRICE_USD = 118500.00
-
-
-# Demo Wallet
-START_BALANCE_USD = 1000.00
+BINANCE_API_KEY = "DEIN_API_KEY"
+BINANCE_SECRET_KEY = "DEIN_SECRET_KEY"
 
 
-# Trading
-SYMBOL = "BTC/USDT"
-TIMEFRAME = "15m"
+# Fallback/Test Werte
+
+BTC_PRICE_USD = 118000.0
