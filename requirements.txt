@@ -1,9 +1,8 @@
+ccxt
+python-binance
+websockets
 pandas
 numpy
-ccxt
-ta
-python-binance
-python-dotenv
-python-telegram-bot
+requests
 PyQt6
-pyqtgraph
+mplfinance
