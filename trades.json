@@ -1,34 +1,52 @@
 [
-    {
-        "symbol": "BTCUSDT",
-        "side": "BUY",
-        "price": 65000.00,
-        "quantity": 0.010000,
-        "fee": 0.00001,
-        "time": "2026-07-23 10:00:00"
-    },
-    {
-        "symbol": "BTCUSDT",
-        "side": "SELL",
-        "price": 70000.00,
-        "quantity": 0.010000,
-        "fee": 0.00001,
-        "time": "2026-07-23 12:00:00"
-    },
-    {
-        "symbol": "BTCUSDT",
-        "side": "BUY",
-        "price": 67500.50,
-        "quantity": 0.020000,
-        "fee": 0.00002,
-        "time": "2026-07-23 14:30:00"
-    },
-    {
-        "symbol": "BTCUSDT",
-        "side": "SELL",
-        "price": 72000.00,
-        "quantity": 0.020000,
-        "fee": 0.00002,
-        "time": "2026-07-23 18:45:00"
-    }
+  {
+    "id": 1,
+    "coin": "₿ BTC",
+    "side": "BUY",
+    "price": 64250.50,
+    "amount": 0.002500,
+    "fee": 0.1606,
+    "fee_asset": "USDT",
+    "timestamp": "2026-01-01 10:00:00"
+  },
+  {
+    "id": 2,
+    "coin": "₿ BTC",
+    "side": "SELL",
+    "price": 65800.20,
+    "amount": 0.002500,
+    "fee": 0.1645,
+    "fee_asset": "USDT",
+    "timestamp": "2026-01-01 16:00:00"
+  },
+  {
+    "id": 3,
+    "coin": "₿ BTC",
+    "side": "BUY",
+    "price": 65120.75,
+    "amount": 0.005000,
+    "fee": 0.3256,
+    "fee_asset": "USDT",
+    "timestamp": "2026-01-02 09:00:00"
+  },
+  {
+    "id": 4,
+    "coin": "₿ BTC",
+    "side": "SELL",
+    "price": 66950.00,
+    "amount": 0.005000,
+    "fee": 0.3347,
+    "fee_asset": "USDT",
+    "timestamp": "2026-01-02 18:00:00"
+  },
+  {
+    "id": 5,
+    "coin": "₿ BTC",
+    "side": "BUY",
+    "price": 66000.40,
+    "amount": 0.010000,
+    "fee": 0.6600,
+    "fee_asset": "USDT",
+    "timestamp": "2026-01-03 12:30:00"
+  }
 ]
