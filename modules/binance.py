@@ -1,13 +1,11 @@
-import os
 import json
 import threading
 
 import websocket
 
 from binance.client import Client
-from binance.exceptions import BinanceAPIException
 
-from modules.logger import TradingLogger
+from modules.config import load_config
 
 
 
@@ -16,114 +14,68 @@ class BinanceModule:
 
     def __init__(self):
 
+        self.config = load_config()
+
         self.client = None
 
-        self.logger = TradingLogger()
+        self.callback = None
 
-        self.connected = False
-
-        self.websocket = None
-
-        self.load_api()
+        self.connect()
 
 
 
-    # ==========================
-    # LOAD API
-    # ==========================
-
-    def load_api(self):
-
-        file = "data/binance.json"
-
-
-        if not os.path.exists(file):
-
-            self.logger.warning(
-                "⚠ Keine Binance API gefunden"
-            )
-
-            return
-
-
+    def connect(self):
 
         try:
 
-            with open(
-                file,
-                "r"
-            ) as f:
-
-                data = json.load(f)
-
-
-
-            api_key = data.get(
-                "key"
+            api_key = self.config.get(
+                "api_key",
+                ""
             )
 
-            secret = data.get(
-                "secret"
+            api_secret = self.config.get(
+                "api_secret",
+                ""
             )
 
 
+            if api_key and api_secret:
 
-            if not api_key or not secret:
-
-                self.logger.error(
-                    "API Key oder Secret fehlt"
+                self.client = Client(
+                    api_key,
+                    api_secret
                 )
 
-                return
-
-            self.client = Client(
-                api_key,
-                secret
-            )
-
-            self.client.API_URL = (
-                "https://api.binance.com/api"
-            )
-
-            server_time = self.client.get_server_time()
-
-            print(
-                "Binance Server Time:",
-                server_time
-            )
-
-            self.connected = True
+                print(
+                    "✅ Binance API geladen"
+                )
 
 
-            self.logger.info(
-                "✅ Binance API loaded"
-            )
+            else:
 
+                self.client = Client()
+
+                print(
+                    "⚠ Binance Public API geladen"
+                )
 
 
         except Exception as e:
 
-            self.logger.error(
-                f"API Fehler: {e}"
+            print(
+                "Binance Verbindung Fehler:",
+                e
             )
 
+            self.client = Client()
 
 
-    # ==========================
-    # BTC PRICE
-    # ==========================
 
-    def get_btc_price(self):
+    def get_price(self):
 
         try:
 
-            if not self.client:
-
-                return 0.0
-
-
-
-            ticker = self.client.get_symbol_ticker(
+            data = self.client.get_symbol_ticker(
 
                 symbol="BTCUSDT"
 
@@ -131,39 +83,31 @@ class BinanceModule:
 
 
             return float(
-                ticker["price"]
+                data["price"]
             )
-
 
 
         except Exception as e:
 
-
-            self.logger.error(
-                f"Preis Fehler: {e}"
+            print(
+                "Preis Fehler:",
+                e
             )
 
-
-            return 0.0
-
+            return 0
 
 
 
-
-    # ==========================
-    # HISTORICAL CANDLES
-    # ==========================
 
     def get_candles(
-        self,
-        limit=200
+            self,
+            limit=50
     ):
 
 
         try:
 
-
-            candles = self.client.get_klines(
+            data = self.client.get_klines(
 
                 symbol="BTCUSDT",
 
@@ -174,15 +118,14 @@ class BinanceModule:
             )
 
 
-
-            result = []
-
+            candles = []
 
 
-            for c in candles:
+
+            for c in data:
 
 
-                result.append({
+                candles.append({
 
                     "time": c[0],
 
@@ -200,33 +143,28 @@ class BinanceModule:
 
 
 
-            return result
+            print(
 
+                "BINANCE CANDLES:",
 
-
-        except BinanceAPIException as e:
-
-
-            self.logger.error(
-
-                f"Binance Fehler: {e}"
+                len(candles)
 
             )
 
 
-            return []
+            return candles
 
 
 
         except Exception as e:
 
+            print(
 
-            self.logger.error(
+                "Candle Fehler:",
 
-                f"Candle Fehler: {e}"
+                e
 
             )
-
 
             return []
 
@@ -234,245 +172,210 @@ class BinanceModule:
 
 
 
-    # ==========================
-    # CHART LOAD
-    # ==========================
+    def start_live_candles(
+            self,
+            callback
+    ):
 
-    def load_candles(self):
 
-        return self.get_candles(
-            100
+        self.callback = callback
+
+
+        candles = self.get_candles(
+            50
+        )
+
+
+        if candles:
+
+            callback(
+                candles
+            )
+
+
+
+        def on_message(
+                ws,
+                message
+        ):
+
+
+            try:
+
+                data = json.loads(
+                    message
+                )
+
+
+                k = data["k"]
+
+
+
+                live = {
+
+                    "time": k["t"],
+
+                    "open": float(k["o"]),
+
+                    "high": float(k["h"]),
+
+                    "low": float(k["l"]),
+
+                    "close": float(k["c"]),
+
+                    "volume": float(k["v"])
+
+                }
+
+
+
+                candles[-1] = live
+
+
+
+                if self.callback:
+
+                    self.callback(
+                        candles
+                    )
+
+
+
+                print(
+
+                    "LIVE BTC:",
+
+                    live["close"]
+
+                )
+
+
+
+            except Exception as e:
+
+                print(
+
+                    "Websocket Fehler:",
+
+                    e
+
+                )
+
+
+
+        socket = (
+
+            "wss://stream.binance.com:9443/ws/"
+
+            "btcusdt@kline_5m"
+
         )
 
 
 
+        ws = websocket.WebSocketApp(
 
+            socket,
 
-    # ==========================
-    # LIVE 5M CANDLES
-    # ==========================
+            on_message=on_message
 
-    def start_live_candles(
-        self,
-        callback
-    ):
-
-
-        def run():
-
-
-            url = (
-
-                "wss://stream.binance.com:9443/ws/"
-
-                "btcusdt@kline_5m"
-
-            )
-
-
-
-            def on_message(
-                ws,
-                message
-            ):
-
-
-                try:
-
-
-                    data = json.loads(
-
-                        message
-
-                    )
-
-
-                    kline = data["k"]
-
-
-
-                    candle = {
-
-
-                        "time":
-
-                        kline["t"],
-
-
-                        "open":
-
-                        float(
-                            kline["o"]
-                        ),
-
-
-                        "high":
-
-                        float(
-                            kline["h"]
-                        ),
-
-
-                        "low":
-
-                        float(
-                            kline["l"]
-                        ),
-
-
-                        "close":
-
-                        float(
-                            kline["c"]
-                        ),
-
-
-                        "volume":
-
-                        float(
-                            kline["v"]
-                        )
-
-                    }
-
-
-
-                    callback(
-                        candle
-                    )
-
-
-
-                except Exception as e:
-
-
-                    self.logger.error(
-
-                        f"Websocket Daten Fehler: {e}"
-
-                    )
-
-
-
-
-
-            def on_error(
-                ws,
-                error
-            ):
-
-
-                self.logger.error(
-
-                    f"Websocket Error: {error}"
-
-                )
-
-
-
-
-
-            def on_close(
-                ws,
-                code,
-                msg
-            ):
-
-
-                self.logger.warning(
-
-                    "Websocket geschlossen"
-
-                )
-
-
-
-
-
-            def on_open(
-                ws
-            ):
-
-
-                self.logger.info(
-
-                    "🟢 Binance Live Candle verbunden"
-
-                )
-
-
-
-
-
-            self.websocket = websocket.WebSocketApp(
-
-                url,
-
-                on_message=on_message,
-
-                on_error=on_error,
-
-                on_close=on_close,
-
-                on_open=on_open
-
-            )
-
-
-
-            self.websocket.run_forever()
-
-
-
+        )
 
 
 
         thread = threading.Thread(
 
-            target=run
+            target=ws.run_forever,
+
+            daemon=True
 
         )
-
-
-        thread.daemon = True
 
 
         thread.start()
 
 
 
+        print(
 
+            "🟢 Binance BTCUSDT 5m Live gestartet"
 
-    # ==========================
-    # STOP WEBSOCKET
-    # ==========================
-
-    def stop_websocket(self):
-
-
-        try:
-
-
-            if self.websocket:
-
-
-                self.websocket.close()
+        )
 
 
 
-                self.logger.info(
-
-                    "Websocket beendet"
-
-                )
 
 
+    def buy_market(
+            self,
+            quantity
+    ):
 
-        except Exception as e:
 
+        if not self.config.get(
+            "live_trading",
+            False
+        ):
 
-            self.logger.error(
-
-                str(e)
-
+            print(
+                "PAPER BUY:",
+                quantity
             )
+
+            return None
+
+
+
+        order = self.client.create_order(
+
+            symbol="BTCUSDT",
+
+            side="BUY",
+
+            type="MARKET",
+
+            quantity=quantity
+
+        )
+
+
+        return order
+
+
+
+
+
+    def sell_market(
+            self,
+            quantity
+    ):
+
+
+        if not self.config.get(
+            "live_trading",
+            False
+        ):
+
+            print(
+                "PAPER SELL:",
+                quantity
+            )
+
+            return None
+
+
+
+        order = self.client.create_order(
+
+            symbol="BTCUSDT",
+
+            side="SELL",
+
+            type="MARKET",
+
+            quantity=quantity
+
+        )
+
+
+        return order

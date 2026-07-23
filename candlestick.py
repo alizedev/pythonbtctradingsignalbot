@@ -1,7 +1,7 @@
-from PyQt6 import QtCore, QtGui
+from PyQt6.QtGui import QPicture, QPainter, QPen, QColor
+from PyQt6.QtCore import QRectF
 
 import pyqtgraph as pg
-
 
 
 
@@ -12,52 +12,113 @@ class CandlestickItem(pg.GraphicsObject):
 
         super().__init__()
 
-        self.data = []
+        self.picture = QPicture()
 
-        self.picture = QtGui.QPicture()
-
-
-
-    # ==========================
-    # UPDATE
-    # ==========================
-
-    def setData(self, data):
-
-        self.data = data
+        self.candles = []
 
         self.generatePicture()
 
+
+
+
+
+    def setData(
+            self,
+            candles
+    ):
+
+
         self.prepareGeometryChange()
+
+
+        self.candles = []
+
+
+
+        for c in candles:
+
+
+
+            if isinstance(c, dict):
+
+
+                self.candles.append({
+
+                    "time": c["time"],
+
+                    "open": float(c["open"]),
+
+                    "high": float(c["high"]),
+
+                    "low": float(c["low"]),
+
+                    "close": float(c["close"])
+
+                })
+
+
+
+            elif isinstance(c, list) and len(c) >= 6:
+
+
+                self.candles.append({
+
+                    "time": c[0],
+
+                    "open": float(c[1]),
+
+                    "high": float(c[2]),
+
+                    "low": float(c[3]),
+
+                    "close": float(c[4])
+
+                })
+
+
+
+        self.generatePicture()
 
         self.update()
 
 
 
-    # ==========================
-    # DRAW CANDLES
-    # ==========================
-
-    def generatePicture(self):
 
 
-        self.picture = QtGui.QPicture()
 
 
-        painter = QtGui.QPainter(
+    def generatePicture(
+            self
+    ):
+
+
+        self.picture = QPicture()
+
+
+        painter = QPainter(
 
             self.picture
 
         )
 
 
+        # dünne Candle Breite
 
-        for index, candle in enumerate(self.data):
+        candle_width = 0.25
+
+
+
+        for index, candle in enumerate(
+
+                self.candles
+
+        ):
+
 
 
             open_price = candle["open"]
 
-            close = candle["close"]
+            close_price = candle["close"]
 
             high = candle["high"]
 
@@ -65,99 +126,118 @@ class CandlestickItem(pg.GraphicsObject):
 
 
 
-            if close >= open_price:
 
-                color = QtGui.QColor(
-                    "#00e676"
+            if close_price >= open_price:
+
+
+                color = QColor(
+
+                    0,
+
+                    200,
+
+                    80
+
                 )
 
 
             else:
 
-                color = QtGui.QColor(
-                    "#ff5252"
+
+                color = QColor(
+
+                    220,
+
+                    50,
+
+                    50
+
                 )
 
+
+
+            pen = QPen(
+
+                color
+
+            )
+
+
+            pen.setWidthF(
+
+                1
+
+            )
 
 
             painter.setPen(
 
-                QtGui.QPen(
-
-                    color,
-
-                    0.7
-
-                )
+                pen
 
             )
 
 
 
-            # Wick (dünn)
+            # Wick
 
             painter.drawLine(
 
-                QtCore.QPointF(
+                index,
 
-                    index,
+                low,
 
-                    low
+                index,
 
-                ),
-
-                QtCore.QPointF(
-
-                    index,
-
-                    high
-
-                )
+                high
 
             )
 
 
 
-            # Candle Body schmal
-
-            body_width = 0.25
-
+            # Body
 
             body_height = abs(
 
-                close - open_price
+                close_price -
+                open_price
 
             )
 
 
-            if body_height < 1:
 
-                body_height = 1
-
+            if body_height == 0:
 
 
-            rect = QtCore.QRectF(
+                body_height = 0.5
 
-                index - body_width / 2,
 
-                min(
-                    open_price,
-                    close
+
+
+
+            painter.fillRect(
+
+                QRectF(
+
+                    index - candle_width,
+
+                    min(
+
+                        open_price,
+
+                        close_price
+
+                    ),
+
+                    candle_width * 2,
+
+                    body_height
+
                 ),
 
-                body_width,
-
-                body_height
+                color
 
             )
 
-
-
-            painter.drawRect(
-
-                rect
-
-            )
 
 
 
@@ -166,20 +246,14 @@ class CandlestickItem(pg.GraphicsObject):
 
 
 
-    # ==========================
-    # PAINT
-    # ==========================
+
+
 
     def paint(
-
-        self,
-
-        painter,
-
-        option,
-
-        widget
-
+            self,
+            painter,
+            option,
+            widget
     ):
 
 
@@ -196,25 +270,26 @@ class CandlestickItem(pg.GraphicsObject):
 
 
 
-    # ==========================
-    # BOUNDING BOX
-    # ==========================
-
-    def boundingRect(self):
 
 
-        if not self.data:
+
+    def boundingRect(
+            self
+    ):
 
 
-            return QtCore.QRectF()
+        if not self.candles:
+
+
+            return QRectF()
 
 
 
         lows = [
 
-            candle["low"]
+            c["low"]
 
-            for candle in self.data
+            for c in self.candles
 
         ]
 
@@ -222,21 +297,21 @@ class CandlestickItem(pg.GraphicsObject):
 
         highs = [
 
-            candle["high"]
+            c["high"]
 
-            for candle in self.data
+            for c in self.candles
 
         ]
 
 
 
-        return QtCore.QRectF(
+        return QRectF(
 
             0,
 
             min(lows),
 
-            len(self.data),
+            len(self.candles),
 
             max(highs) - min(lows)
 

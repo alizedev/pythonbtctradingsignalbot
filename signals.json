@@ -1,0 +1,9 @@
+{
+    "symbol": "BTC",
+    "side": "BUY",
+    "confidence": 92,
+    "entry": 64000,
+    "stop_loss": 6350,
+    "take_profit": 6480,
+    "created": "2026-07-23 15:00:00"
+}

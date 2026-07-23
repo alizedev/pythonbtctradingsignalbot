@@ -4,31 +4,68 @@ from PyQt6.QtWidgets import QApplication
 
 from gui import Dashboard
 
+from modules.binance import BinanceModule
+
+from modules.bot import TradingBot
+
+
 
 
 class TradingBotApp:
 
 
+
     def __init__(self):
 
-        self.app = QApplication(sys.argv)
 
-        self.window = Dashboard()
+        self.binance = BinanceModule()
+
+
+        self.bot = TradingBot(
+
+            self.binance
+
+        )
+
+
+        self.window = Dashboard(
+
+            self.binance,
+
+            self.bot
+
+        )
+
+
 
         self.window.show()
 
 
 
-    def run(self):
+        self.bot.start()
 
-        sys.exit(
-            self.app.exec()
-        )
+
 
 
 
 if __name__ == "__main__":
 
-    app = TradingBotApp()
 
-    app.run()
+
+    app = QApplication(
+
+        sys.argv
+
+    )
+
+
+
+    program = TradingBotApp()
+
+
+
+    sys.exit(
+
+        app.exec()
+
+    )

@@ -1,404 +1,104 @@
-import json
-import os
-
-from datetime import datetime
+from modules.risk import RiskManager
+from modules.trade_history import TradeHistory
 
 
 
 class Trader:
 
 
-    def __init__(self, binance):
+    def __init__(
+            self,
+            binance
+    ):
 
 
         self.binance = binance
 
+        self.risk = RiskManager()
 
-        # ==========================
-        # SICHERHEIT
-        # ==========================
+        self.history = TradeHistory()
 
-        self.PAPER_MODE = False
 
+        self.position = None
 
-        # maximale Trade Größe
+        self.entry_price = 0
 
-        self.max_trade_usdt = 10
+        self.quantity = 0
 
 
 
 
-        # Paper Guthaben
 
-        self.usdt_balance = 500.0
+    def execute_signal(
+            self,
+            signal
+    ):
 
-        self.btc_amount = 0.0
 
+        action = signal.get(
+            "signal"
+        )
 
 
-        self.trades_file = "trades.json"
+        price = signal.get(
+            "price"
+        )
 
 
 
+        confidence = signal.get(
+            "confidence",
+            0
+        )
 
 
 
-    # ==========================
-    # BUY
-    # ==========================
+        print(
 
-    def buy(self, amount):
+            "TRADER:",
 
+            action,
 
-        if amount > self.max_trade_usdt:
+            "Confidence:",
 
+            confidence
 
-            amount = self.max_trade_usdt
+        )
 
 
 
+        # Nur starke Signale handeln
 
-        price = self.binance.get_btc_price()
+        if confidence < 70:
 
+            print(
 
+                "Signal zu schwach"
 
-        if price <= 0:
+            )
 
-            return None
+            return
 
 
 
 
-        btc_quantity = amount / price
 
+        if action == "BUY":
 
 
+            self.buy(
+                price
+            )
 
 
 
-        # ======================
-        # LIVE BINANCE
-        # ======================
 
-        if not self.PAPER_MODE:
 
+        elif action == "SELL":
 
-            try:
 
-
-                order = self.binance.client.create_order(
-
-
-                    symbol="BTCUSDT",
-
-
-                    side="BUY",
-
-
-                    type="MARKET",
-
-
-                    quoteOrderQty=amount
-
-
-                )
-
-
-
-                trade = {
-
-
-                    "mode":"LIVE",
-
-
-                    "order":order
-
-
-                }
-
-
-
-            except Exception as e:
-
-
-                print(
-
-                    "BUY Fehler:",
-
-                    e
-
-                )
-
-
-                return None
-
-
-
-
-        # ======================
-        # PAPER
-        # ======================
-
-        else:
-
-
-            if amount > self.usdt_balance:
-
-
-                return None
-
-
-
-            self.usdt_balance -= amount
-
-
-            self.btc_amount += btc_quantity
-
-
-
-            trade = {
-
-
-                "mode":"PAPER",
-
-
-                "coin":"BTC",
-
-
-                "side":"BUY",
-
-
-                "price":price,
-
-
-                "amount":btc_quantity,
-
-
-                "value":amount,
-
-
-                "time":datetime.now().strftime(
-
-                    "%Y-%m-%d %H:%M:%S"
-
-                )
-
-            }
-
-
-
-
-        self.save_trade(trade)
-
-
-
-        return trade
-
-
-
-
-
-
-
-    # ==========================
-    # SELL
-    # ==========================
-
-    def sell(self, amount_btc):
-
-
-        price = self.binance.get_btc_price()
-
-
-
-        if price <= 0:
-
-            return None
-
-
-
-
-
-
-        if not self.PAPER_MODE:
-
-
-            try:
-
-
-                order = self.binance.client.create_order(
-
-
-                    symbol="BTCUSDT",
-
-
-                    side="SELL",
-
-
-                    type="MARKET",
-
-
-                    quantity=amount_btc
-
-
-                )
-
-
-
-                trade = {
-
-
-                    "mode":"LIVE",
-
-
-                    "order":order
-
-
-                }
-
-
-
-            except Exception as e:
-
-
-                print(
-
-                    "SELL Fehler:",
-
-                    e
-
-                )
-
-
-                return None
-
-
-
-
-
-        else:
-
-
-            value = amount_btc * price
-
-
-
-            self.btc_amount -= amount_btc
-
-
-            self.usdt_balance += value
-
-
-
-
-            trade = {
-
-
-                "mode":"PAPER",
-
-
-                "coin":"BTC",
-
-
-                "side":"SELL",
-
-
-                "price":price,
-
-
-                "amount":amount_btc,
-
-
-                "value":value,
-
-
-                "time":datetime.now().strftime(
-
-                    "%Y-%m-%d %H:%M:%S"
-
-                )
-
-            }
-
-
-
-
-
-        self.save_trade(trade)
-
-
-
-        return trade
-
-
-
-
-
-
-    # ==========================
-    # SAVE HISTORY
-    # ==========================
-
-    def save_trade(self, trade):
-
-
-        trades=[]
-
-
-
-        if os.path.exists(self.trades_file):
-
-
-            try:
-
-
-                with open(
-
-                    self.trades_file,
-
-                    "r"
-
-                ) as f:
-
-
-                    trades=json.load(f)
-
-
-
-            except:
-
-
-                trades=[]
-
-
-
-
-
-
-        trades.append(trade)
-
-
-
-
-
-
-        with open(
-
-            self.trades_file,
-
-            "w"
-
-        ) as f:
-
-
-            json.dump(
-
-                trades,
-
-                f,
-
-                indent=4
-
+            self.sell(
+                price
             )
 
 
@@ -407,29 +107,151 @@ class Trader:
 
 
 
-    # ==========================
-    # STATUS
-    # ==========================
-
-    def status(self):
-
-
-        return {
+    def buy(
+            self,
+            price
+    ):
 
 
-            "paper":
+        if self.position:
 
-            self.PAPER_MODE,
+            print(
 
+                "Bereits BTC Position"
 
-            "USDT":
+            )
 
-            self.usdt_balance,
-
-
-            "BTC":
-
-            self.btc_amount
+            return
 
 
-        }
+
+        quantity = self.risk.calculate_quantity(
+
+            price
+
+        )
+
+
+
+        order = self.binance.buy_market(
+
+            quantity
+
+        )
+
+
+
+        self.position = "BTC"
+
+        self.entry_price = price
+
+        self.quantity = quantity
+
+
+
+        self.history.add_trade(
+
+            "BUY",
+
+            price,
+
+            quantity
+
+        )
+
+
+
+        print(
+
+            "🟢 BUY",
+
+            quantity,
+
+            "BTC @",
+
+            price
+
+        )
+
+
+
+
+
+
+
+    def sell(
+            self,
+            price
+    ):
+
+
+        if not self.position:
+
+
+            print(
+
+                "Keine Position"
+
+            )
+
+            return
+
+
+
+
+
+        order = self.binance.sell_market(
+
+            self.quantity
+
+        )
+
+
+
+        self.history.add_trade(
+
+            "SELL",
+
+            price,
+
+            self.quantity
+
+        )
+
+
+
+        profit = (
+
+            price -
+            self.entry_price
+
+        ) * self.quantity
+
+
+
+        print(
+
+            "🔴 SELL",
+
+            self.quantity,
+
+            "BTC @",
+
+            price,
+
+            "PROFIT:",
+
+            round(
+                profit,
+                2
+            )
+
+        )
+
+
+
+        self.position = None
+
+        self.entry_price = 0
+
+        self.quantity = 0

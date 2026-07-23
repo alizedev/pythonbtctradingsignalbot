@@ -2,70 +2,90 @@ import threading
 import time
 
 
+from modules.signal_scanner import SignalScanner
+from modules.trader import Trader
+
+
 
 class TradingBot:
 
 
+
     def __init__(
-
-        self,
-
-        binance,
-
-        strategy,
-
-        trader,
-
-        risk
-
+            self,
+            binance
     ):
 
 
         self.binance = binance
 
-        self.strategy = strategy
 
-        self.trader = trader
+        self.scanner = SignalScanner()
 
-        self.risk = risk
 
+        self.trader = Trader(
+
+            binance
+
+        )
+
+
+        self.candles = []
 
 
         self.running = False
 
-        self.auto_trade = False
-
-
-
-        self.thread = None
-
-
-
-        self.callback = None
-
-
-
-        self.last_signal = "WAIT"
 
 
 
 
+    def update_candles(
+            self,
+            candles
+    ):
 
-    # ==========================
-    # START
-    # ==========================
+
+        self.candles = candles
+
+
+        print(
+
+            "BOT CANDLES:",
+
+            len(candles)
+
+        )
+
+
+
+        if len(candles) >= 20:
+
+
+            signal = self.scanner.scan(
+
+                candles
+
+            )
+
+
+            self.trader.execute_signal(
+
+                signal
+
+            )
+
+
+
+
+
+
 
     def start(
-
-        self,
-
-        callback=None
-
+            self
     ):
 
 
         if self.running:
-
 
             return
 
@@ -74,22 +94,25 @@ class TradingBot:
         self.running = True
 
 
-        self.callback = callback
 
+        self.binance.start_live_candles(
 
-
-
-        self.thread = threading.Thread(
-
-            target=self.loop
+            self.update_candles
 
         )
 
 
-        self.thread.daemon = True
+
+        thread = threading.Thread(
+
+            target=self.monitor,
+
+            daemon=True
+
+        )
 
 
-        self.thread.start()
+        thread.start()
 
 
 
@@ -105,11 +128,9 @@ class TradingBot:
 
 
 
-    # ==========================
-    # MAIN LOOP
-    # ==========================
-
-    def loop(self):
+    def monitor(
+            self
+    ):
 
 
         while self.running:
@@ -118,285 +139,47 @@ class TradingBot:
             try:
 
 
-
-                candles = self.binance.get_candles(
-
-                    200
-
-                )
+                price = self.binance.get_price()
 
 
 
+                print(
 
-                if len(candles) < 50:
+                    "BTC PRICE:",
 
-
-                    print(
-
-                        "Keine Daten"
-
-                    )
-
-
-                    time.sleep(60)
-
-                    continue
-
-
-
-
-
-
-                signal = self.strategy.analyze(
-
-                    candles
+                    price
 
                 )
-
-
-
-                score = self.strategy.get_score()
-
-
-
-                price = candles[-1]["close"]
-
-
-
-                self.last_signal = signal
-
-
-
-
-                message = (
-
-                    f"BTC ${price:,.2f} "
-
-                    f"| Signal {signal} "
-
-                    f"| Score {score}/100"
-
-                )
-
-
-
-                print(message)
-
-
-
-
-
-                if self.callback:
-
-
-                    self.callback(
-
-                        signal
-
-                    )
-
-
-
-
-
-
-                # =====================
-                # AUTO TRADING
-                # =====================
-
-
-                if self.auto_trade:
-
-
-
-                    if signal == "BUY" and score >= 80:
-
-
-                        self.buy_trade()
-
-
-
-
-
-                    elif signal == "SELL" and score <= 20:
-
-
-                        self.sell_trade()
-
-
-
 
 
 
             except Exception as e:
 
 
-
                 print(
 
-                    f"Bot Fehler: {e}"
+                    "Monitor Fehler:",
+
+                    e
 
                 )
 
 
 
+            time.sleep(10)
 
 
 
 
-            # 5 Minuten
 
-            time.sleep(
 
-                300
 
-            )
-
-
-
-
-
-
-
-
-    # ==========================
-    # BUY
-    # ==========================
-
-    def buy_trade(self):
-
-
-        amount = self.risk.get_trade_amount()
-
-
-
-        if not self.risk.allowed_trade(
-
-            amount
-
-        ):
-
-
-            return
-
-
-
-
-        trade = self.trader.buy(
-
-            amount
-
-        )
-
-
-
-        if trade:
-
-
-            print(
-
-                "🟢 BUY ausgeführt"
-
-            )
-
-
-
-
-
-
-
-    # ==========================
-    # SELL
-    # ==========================
-
-    def sell_trade(self):
-
-
-        if self.trader.btc_amount <= 0:
-
-
-            return
-
-
-
-
-        trade = self.trader.sell(
-
-            self.trader.btc_amount
-
-        )
-
-
-
-        if trade:
-
-
-            print(
-
-                "🔴 SELL ausgeführt"
-
-            )
-
-
-
-
-
-
-
-    # ==========================
-    # AUTO TRADE ON
-    # ==========================
-
-    def enable_auto_trade(self):
-
-
-        self.auto_trade = True
-
-
-
-        print(
-
-            "⚡ Auto Trading aktiviert"
-
-        )
-
-
-
-
-
-
-    # ==========================
-    # AUTO TRADE OFF
-    # ==========================
-
-    def disable_auto_trade(self):
-
-
-        self.auto_trade = False
-
-
-
-        print(
-
-            "⛔ Auto Trading deaktiviert"
-
-        )
-
-
-
-
-
-
-
-    # ==========================
-    # STOP
-    # ==========================
-
-    def stop(self):
+    def stop(
+            self
+    ):
 
 
         self.running = False
-
 
 
         print(

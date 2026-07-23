@@ -1,43 +1,11 @@
-# =====================================
-# BTC Trading Terminal
-# Dependencies
-# =====================================
+python-binance==1.0.19
 
+PyQt6==6.7.1
 
-# GUI
-PyQt6==6.9.1
-
-
-# Interactive Charts
 pyqtgraph==0.13.7
 
-
-# Binance API + WebSocket
-python-binance==1.0.29
-
-
-# HTTP
-requests==2.32.4
-
-
-# Async WebSocket Support
-aiohttp==3.12.15
-
-
-# Data Processing
 numpy==2.0.2
-pandas==2.3.1
 
+requests==2.32.3
 
-# Environment Variables
-python-dotenv==1.1.1
-
-
-# Websocket Client
-websocket-client==1.8.0
-
-
-# Date Handling
-python-dateutil==2.9.0.post0
-
-websocket-client
+urllib3==2.2.3
