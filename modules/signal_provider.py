@@ -1,45 +1,56 @@
-import json
-import os
+import time
+import random
 
 
 class SignalProvider:
 
-
     def __init__(self):
 
-        self.file = "signals.json"
+        self.last_signal = "HOLD"
 
-
-
+        self.last_time = 0
 
     def get_signal(self):
+        """
+        Externer Signal Provider
 
+        Rückgabe:
 
-        if not os.path.exists(self.file):
+        BUY
+        SELL
+        HOLD
 
-            return None
+        mit Confidence Score
 
+        """
 
+        # Abstand zwischen Signalen
 
-        try:
+        if time.time() - self.last_time < 60:
 
-            with open(
-                self.file,
-                "r",
-                encoding="utf-8"
-            ) as f:
+            return {"signal": "HOLD", "confidence": 0, "source": "COPY_TRADING"}
 
-                return json.load(f)
+        self.last_time = time.time()
 
+        # TEST SIGNAL
+        #
+        # Später ersetzen durch:
+        #
+        # TradingView Webhook
+        # Telegram Bot
+        # Binance Copy Trading API
+        #
 
+        signals = ["BUY", "SELL", "HOLD"]
 
-        except Exception as e:
+        signal = random.choice(signals)
 
+        confidence = random.randint(45, 95)
 
-            print(
-                "Signal Fehler:",
-                e
-            )
+        self.last_signal = signal
 
-
-            return None
+        return {
+            "signal": signal,
+            "confidence": confidence,
+            "source": "TOP_TRADER_SIMULATION",
+        }

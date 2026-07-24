@@ -2,15 +2,9 @@ from modules.risk import RiskManager
 from modules.trade_history import TradeHistory
 
 
-
 class Trader:
 
-
-    def __init__(
-            self,
-            binance
-    ):
-
+    def __init__(self, binance):
 
         self.binance = binance
 
@@ -18,240 +12,110 @@ class Trader:
 
         self.history = TradeHistory()
 
-
-        self.position = None
+        self.position = False
 
         self.entry_price = 0
 
         self.quantity = 0
 
+    def execute_signal(self, signal):
 
+        action = signal.get("signal", "HOLD")
 
+        price = signal.get("price", 0)
 
+        confidence = signal.get("confidence", 0)
 
-    def execute_signal(
-            self,
-            signal
-    ):
+        print(f"📊 SIGNAL: {action} | Confidence: {confidence}% | Price: {price}")
 
+        # Mindest-Confidence auf 45% gesetzt
 
-        action = signal.get(
-            "signal"
-        )
+        if confidence < 45:
 
-
-        price = signal.get(
-            "price"
-        )
-
-
-
-        confidence = signal.get(
-            "confidence",
-            0
-        )
-
-
-
-        print(
-
-            "TRADER:",
-
-            action,
-
-            "Confidence:",
-
-            confidence
-
-        )
-
-
-
-        # Nur starke Signale handeln
-
-        if confidence < 70:
-
-            print(
-
-                "Signal zu schwach"
-
-            )
+            print("⚠ Signal unter 45% - ignoriert")
 
             return
-
-
-
-
 
         if action == "BUY":
 
-
-            self.buy(
-                price
-            )
-
-
-
-
+            self.buy(price)
 
         elif action == "SELL":
 
+            self.sell(price)
 
-            self.sell(
-                price
-            )
+        else:
 
+            print("⏸ HOLD")
 
-
-
-
-
-
-    def buy(
-            self,
-            price
-    ):
-
+    def buy(self, price):
 
         if self.position:
 
-            print(
-
-                "Bereits BTC Position"
-
-            )
+            print("⚠ BTC Position bereits offen")
 
             return
 
+        quantity = self.risk.calculate_quantity(price)
 
+        print(f"🟢 BUY ORDER: {quantity} BTC @ {price}")
 
-        quantity = self.risk.calculate_quantity(
+        # Binance Kauf
 
-            price
+        self.binance.buy_market(quantity)
 
-        )
+        # History speichern
 
+        self.history.add_trade("BUY", price, quantity)
 
-
-        order = self.binance.buy_market(
-
-            quantity
-
-        )
-
-
-
-        self.position = "BTC"
+        self.position = True
 
         self.entry_price = price
 
         self.quantity = quantity
 
-
-
-        self.history.add_trade(
-
-            "BUY",
-
-            price,
-
-            quantity
-
-        )
-
-
-
-        print(
-
-            "🟢 BUY",
-
-            quantity,
-
-            "BTC @",
-
-            price
-
-        )
-
-
-
-
-
-
-
-    def sell(
-            self,
-            price
-    ):
-
+    def sell(self, price):
 
         if not self.position:
 
-
-            print(
-
-                "Keine Position"
-
-            )
+            print("⚠ Keine BTC Position zum Verkaufen")
 
             return
 
+        print(f"🔴 SELL ORDER: {self.quantity} BTC @ {price}")
 
+        # Binance Verkauf
 
+        self.binance.sell_market(self.quantity)
 
+        # History speichern
 
-        order = self.binance.sell_market(
+        self.history.add_trade("SELL", price, self.quantity)
 
-            self.quantity
+        profit = (price - self.entry_price) * self.quantity
 
-        )
+        fee = self.risk.calculate_fee(price, self.quantity)
 
+        profit_after_fee = profit - fee
 
+        print(f"💰 Profit: {profit_after_fee:.4f} USDT")
 
-        self.history.add_trade(
-
-            "SELL",
-
-            price,
-
-            self.quantity
-
-        )
-
-
-
-        profit = (
-
-            price -
-            self.entry_price
-
-        ) * self.quantity
-
-
-
-        print(
-
-            "🔴 SELL",
-
-            self.quantity,
-
-            "BTC @",
-
-            price,
-
-            "PROFIT:",
-
-            round(
-                profit,
-                2
-            )
-
-        )
-
-
-
-        self.position = None
+        self.position = False
 
         self.entry_price = 0
 
         self.quantity = 0
+
+    def check_risk(self, current_price):
+
+        if not self.position:
+
+            return
+
+        result = self.risk.check_exit(self.entry_price, current_price)
+
+        if result["action"] == "SELL":
+
+            print("🚨", result["reason"])
+
+            self.sell(current_price)

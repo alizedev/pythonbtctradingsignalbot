@@ -1,107 +1,47 @@
 from datetime import datetime
 
 
-
 class TradingLogger:
-
 
     def __init__(self):
 
         pass
 
-
-
-
-
     # ==========================
     # INFO
     # ==========================
 
-    def info(
+    def info(self, message):
 
-        self,
-
-        message
-
-    ):
-
-
-        text = (
-
-            f"[{self.time()}] INFO: {message}"
-
-        )
-
+        text = f"[{self.time()}] INFO: {message}"
 
         print(text)
 
-
         return text
-
-
-
-
-
 
     # ==========================
     # ERROR
     # ==========================
 
-    def error(
+    def error(self, message):
 
-        self,
-
-        message
-
-    ):
-
-
-        text = (
-
-            f"[{self.time()}] ERROR: {message}"
-
-        )
-
+        text = f"[{self.time()}] ERROR: {message}"
 
         print(text)
 
-
         return text
-
-
-
-
-
 
     # ==========================
     # WARNING
     # ==========================
 
-    def warning(
+    def warning(self, message):
 
-        self,
-
-        message
-
-    ):
-
-
-        text = (
-
-            f"[{self.time()}] WARNING: {message}"
-
-        )
-
+        text = f"[{self.time()}] WARNING: {message}"
 
         print(text)
 
-
         return text
-
-
-
-
-
 
     # ==========================
     # TIME
@@ -109,9 +49,4 @@ class TradingLogger:
 
     def time(self):
 
-
-        return datetime.now().strftime(
-
-            "%Y-%m-%d %H:%M:%S"
-
-        )
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")

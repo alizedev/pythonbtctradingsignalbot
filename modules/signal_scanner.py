@@ -1,303 +1,160 @@
 import statistics
 
 
-
 class SignalScanner:
-
 
     def __init__(self):
 
         self.last_signal = "HOLD"
 
-
-
-    def calculate_ema(
-            self,
-            prices,
-            period=20
-    ):
-
+    def calculate_ema(self, prices, period=20):
 
         if len(prices) < period:
-
             return None
 
-
-
-        multiplier = (
-            2 /
-            (period + 1)
-        )
-
+        multiplier = 2 / (period + 1)
 
         ema = prices[0]
 
-
-
         for price in prices[1:]:
 
-            ema = (
-
-                (price - ema)
-                *
-                multiplier
-
-            ) + ema
-
-
+            ema = ((price - ema) * multiplier) + ema
 
         return ema
 
-
-
-
-
-    def calculate_rsi(
-            self,
-            prices,
-            period=14
-    ):
-
+    def calculate_rsi(self, prices, period=14):
 
         if len(prices) <= period:
-
             return 50
-
-
 
         gains = []
 
         losses = []
 
+        for i in range(1, len(prices)):
 
+            change = prices[i] - prices[i - 1]
 
-        for i in range(
-            1,
-            len(prices)
-        ):
+            if change > 0:
 
-
-            diff = (
-
-                prices[i]
-                -
-                prices[i-1]
-
-            )
-
-
-
-            if diff >= 0:
-
-                gains.append(
-                    diff
-                )
-
-                losses.append(
-                    0
-                )
-
+                gains.append(change)
+                losses.append(0)
 
             else:
 
-                gains.append(
-                    0
-                )
+                gains.append(0)
+                losses.append(abs(change))
 
-                losses.append(
-                    abs(diff)
-                )
+        avg_gain = statistics.mean(gains[-period:])
 
-
-
-        avg_gain = statistics.mean(
-
-            gains[-period:]
-
-        )
-
-
-        avg_loss = statistics.mean(
-
-            losses[-period:]
-
-        )
-
-
+        avg_loss = statistics.mean(losses[-period:])
 
         if avg_loss == 0:
 
             return 100
 
+        rs = avg_gain / avg_loss
 
+        return 100 - (100 / (1 + rs))
 
-        rs = (
+    def volume_strength(self, candles):
 
-            avg_gain /
-            avg_loss
+        volumes = [c["volume"] for c in candles]
 
-        )
+        if len(volumes) < 10:
 
+            return False
 
-        rsi = (
+        avg = statistics.mean(volumes[:-1])
 
-            100 -
-            (
-                100 /
-                (1 + rs)
-            )
+        return volumes[-1] > avg
 
-        )
+    def scan(self, candles):
 
+        if len(candles) < 25:
 
-        return rsi
+            return {"signal": "WAIT", "confidence": 0}
 
-
-
-
-
-    def scan(
-            self,
-            candles
-    ):
-
-
-        if not candles or len(candles) < 20:
-
-            return {
-
-                "signal": "WAIT",
-
-                "confidence": 0
-
-            }
-
-
-
-        closes = [
-
-            c["close"]
-
-            for c in candles
-
-        ]
-
-
+        closes = [c["close"] for c in candles]
 
         price = closes[-1]
 
+        ema = self.calculate_ema(closes)
 
+        rsi = self.calculate_rsi(closes)
 
-        ema = self.calculate_ema(
-            closes,
-            20
-        )
+        volume_ok = self.volume_strength(candles)
 
+        buy_score = 0
 
-        rsi = self.calculate_rsi(
-            closes
-        )
+        sell_score = 0
 
+        # RSI
 
+        if rsi < 35:
 
-        confidence = 50
+            buy_score += 30
 
+        elif rsi > 70:
 
+            sell_score += 30
 
-        signal = "HOLD"
+        # Trend
 
+        if price > ema:
 
-
-        # Oversold + Trend
-
-        if (
-
-            rsi < 35
-
-            and
-
-            price > ema
-
-        ):
-
-
-            signal = "BUY"
-
-            confidence += 20
-
-
-
-        # Overbought
-
-        elif (
-
-            rsi > 70
-
-        ):
-
-
-            signal = "SELL"
-
-            confidence += 20
-
-
+            buy_score += 25
 
         else:
 
+            sell_score += 25
+
+        # Momentum
+
+        if closes[-1] > closes[-5]:
+
+            buy_score += 20
+
+        else:
+
+            sell_score += 20
+
+        # Volume
+
+        if volume_ok:
+
+            buy_score += 15
+
+            sell_score += 15
+
+        if buy_score > sell_score:
+
+            signal = "BUY"
+
+            confidence = buy_score
+
+        elif sell_score > buy_score:
+
+            signal = "SELL"
+
+            confidence = sell_score
+
+        else:
 
             signal = "HOLD"
 
-
+            confidence = 0
 
         result = {
-
-
-            "signal":
-
-            signal,
-
-
-            "price":
-
-            price,
-
-
-            "rsi":
-
-            round(
-                rsi,
-                2
-            ),
-
-
-            "ema":
-
-            round(
-                ema,
-                2
-            ),
-
-
-            "confidence":
-
-            min(
-                confidence,
-                100
-            )
-
+            "signal": signal,
+            "price": price,
+            "rsi": round(rsi, 2),
+            "ema": round(ema, 2),
+            "confidence": min(confidence, 100),
         }
-
-
 
         self.last_signal = signal
 
-
-
-        print(
-            "SIGNAL:",
-            result
-        )
-
-
+        print("SIGNAL:", result)
 
         return result
